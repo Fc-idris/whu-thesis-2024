@@ -9,7 +9,7 @@
 
 本文中将该定义简化，只进行高分辨率与低分辨图像的区分。
 \subsubsection{高分辨率图像}
-高分辨率图像通常指具有较高空间分辨率的图像，即图像中单个像素所代表的地面面积较小，能够显示更加精细的地面特征。高分辨率图像使得用户可以观察到较小的地面对象，例如单个车辆、道路标线甚至是行人。虽然“高分辨率”这个术语没有绝对的定义，但在遥感领域，我们把空间分辨率小于1米（通常在0.3米到1米之间）的图像常被认为是高分辨率图像。目前我们可以使用的高分辨率遥感图像来源主要有：航空摄影（搭载高分辨率摄像机或低空高分辨率无人机拍摄的数据）和某些高性能的卫星遥感仪器，例如WorldView系列、GeoEye-1、QuickBird等。
+高分辨率图像通常指具有较高空间分辨率的图像，即图像中单个像素所代表的地面面积较小，能够显示更加精细的地面特征\cite{shimizu1983laser}。高分辨率图像使得用户可以观察到较小的地面对象，例如单个车辆、道路标线甚至是行人。虽然“高分辨率”这个术语没有绝对的定义，但在遥感领域，我们把空间分辨率小于1米（通常在0.3米到1米之间）的图像常被认为是高分辨率图像。目前我们可以使用的高分辨率遥感图像来源主要有：航空摄影（搭载高分辨率摄像机或低空高分辨率无人机拍摄的数据）和某些高性能的卫星遥感仪器，例如WorldView系列\cite{scitor2000project}、GeoEye-1、QuickBird等。
 高分辨率图像中的精细地面特征信息，在城市规划、交通监控、农业监测（如作物健康分析）、详细的地物分类、灾害评估等领域都有广泛的使用。特别是在目标识别领域中，高分辨率的图像可以使用深度学习中多种模型和方法，具有很高的应用价值。
 
 
@@ -19,32 +19,40 @@
 
 
 \subsubsection{重访周期与成本}
-地球卫星的轨道半径和周期可以根据开普勒第三定律和牛顿的万有引力定律推导出来的。下面是公式推导的过程：
-牛顿的万有引力定律描述了两个物体之间的引力，公式为：
+
+
+
+
+对于遥感卫星而言，其拍摄影像的分辨率是由传感器在地面采样的间隔决定的，即每个传感器探测元件在地面投影的大小，称为地面采样距离（Ground Sample Disrance,GSD）。在理想状况下，地面采样距离可以通过下式计算:
 \begin{equation}
-    F = G \frac{m_1 m_2}{r^2}​​
+    GSD = {\frac{dR}{f}} \label{eq:GSD}​​​​
 \end{equation}
-其中，F是两个物体之间的引力，G是万有引力常数，$m_1​$和$m_2$​是两个物体的质量，r是两个物体的中心之间的距离。
-对于在圆轨道上运动的卫星，向心加速度$a_c$提供了必要的向心力，可由下式给出:
+其中d为传感器探测元件的宽度，R为传感器距离地面高度，\(f\)为光学系统焦距.
+
+通过万有引力定律和开普勒第三定律，可推出遥感卫星绕地球旋转的周期与轨道半径之间的关系。
 \begin{equation}
-    F_c = m \frac{v^2}{r}​​​
+    T = 2\pi \sqrt{\frac{r^3}{G (M + m)}} \label{eq:T}​​​​
 \end{equation}
-这里，$F_c$​是向心力，m是卫星的质量，v是卫星的轨道速度，r是卫星绕行天体的轨道半径。
-由于卫星在轨道上的向心力正是由地球对卫星的万有引力提供的，可得到：
-\begin{equation}
-    G \frac{M m}{r^2} = m \frac{v^2}{r}​​​​
-\end{equation}
-轨道周期T是卫星完成一圈轨道所需的时间，与轨道速度和轨道半径相关，可表示为：
-\begin{equation}
-    T = \frac{2\pi r}{v}​​​​
-\end{equation}
-在一般情况下，当考虑两个物体质量都不能忽略时，M + m代替上式中的M，最终得到两个物体之间的轨道周期T与轨道半径r之间的关系：
-\begin{equation}
-    T = 2\pi \sqrt{\frac{r^3}{G (M + m)}}​​​​
-\end{equation}
-这就是天体绕另一天体旋转周期的计算公式，它揭示了轨道周期与轨道半径之间的关系。这个公式在天文学和航天工程中有广泛应用，用于预测天体运动及设计人造卫星的轨道。
-高分辨率图像一般由低轨卫星拍摄，具有较小的轨道半径和周期。同时也因此具有较小的视场（the field of view, FOV）较小。高分辨率图像辨率卫星通常使用任务驱动模式进行地球观测。这意味着，如果不提前提交观测任务，一颗卫星需要6个月才能完成全球覆盖，获得特定区域的图像的重访周期相当长。此外，高分辨率图像非常昂贵，例如 WorldView-3 的价格为 34 美元/km2。
-作为对比，低分辨率卫星的往往运行在更高的轨道上，虽然空间分辨率有所降低，但视场较大。因此获得同一地点重访周期要短得多，例如 PlanetScope 卫星每天重访一次，价格也低得多，为 1.8 美元/平方公里。
+
+由式\ref{eq:GSD}和式\ref{eq:T}，可以分析高低分辨率图像拍摄卫星的轨道条件。高分辨率图像一般由低轨卫星拍摄，具有较小的轨道半径和周期。同时也因此具有较小的视场（the field of view, FOV）较小。高分辨率图像辨率卫星通常使用任务驱动模式进行地球观测。这意味着，如果不提前提交观测任务，一颗卫星需要6个月才能完成全球覆盖，获得特定区域的图像的重访周期相当长。此外，高分辨率图像非常昂贵，例如 WorldView-3 的价格为34美元/平方公里。作为对比，低分辨率卫星的往往运行在更高的轨道上，虽然空间分辨率有所降低，但视场较大。因此获得同一地点重访周期要短得多，例如 PlanetScope 卫星每天重访一次，价格也低得多，为 1.8 美元/平方公里。不同分辨率卫星的拍摄成本和覆盖周期如下表\ref{tab:cost}所示。
+\begin{table}[h]
+    \centering
+    \caption{不同分辨率卫星拍摄成本及覆盖周期}
+    \label{tab:cost}
+    \begin{tabularx}{\textwidth}{CCCCC}
+      \toprule
+      名称 & 分辨率 & 重访周期& 全球覆盖周期 & 花费 \\
+      \midrule
+      WorldView-3    & 0.3m  &4.5天 &6个月&34美元/$km^2$\\
+      GeoEye-1    & 0.4m  &4天 &6个月&29.5美元/$km^2$\\
+      SuperView-    & 0.5m  &4天 &6个月&23美元/$km^2$\\
+      QuickBird    & 0.6m  &7天 &6个月&17.5美元/$km^2$\\
+      Spot 6/7    & 1.5m  &2天 &1个月&5.75美元/$km^2$\\
+      PlanetScope    & 3m  &小于1天 &小于5天&1.8美元/$km^2$\\
+      RapidEye    & 5m  &1天 &小于1个月&1.28美元/$km^2$\\
+      \bottomrule
+    \end{tabularx}
+\end{table}
 
 \subsection{研究意义}
 单独依靠低分辨率图像进行目标计数是十分困难的，而仅通过高分辨率图像进行目标计数，不仅花费巨大，同时还需要面对连续监控数据的缺失。如何通过低成本且具有时间连续性的低分辨率图像进行目标计数及实时监测就成为解决问题的关键。本文提出的方法通过少量高分辨率图像的辅助，在时间连续的低分辨率图像上实现目标计数，具有很高的应用价值。该方法不仅局限于目标计数，更好地利用了低分辨率图像中蕴含的模糊信息，在稠密车流人流识别、智慧城市设计等领域也有很高的应用潜力。
@@ -53,15 +61,24 @@
 \subsection{跨分辨率遥感影像目标计数现状}
 高分辨率图像计数主要有两类方法。一类是检测方法，通过识别出具体的物体位置来进一步计数。另一种是计数类方法，直接估计图像中对应物体的数目。
 \subsubsection{目标检测}
-基于检测的目标计数是目标检测下的一个分支。目标检测作为计算机视觉的一个主要研究方向，主要研究的是如何识别出特定的对象，并确定它的大小和位置。目前随着深度学习技术的发展，利用神经网络进行目标检测已经成为主流方案。主要的目标检测算法包括RCNN系列、SSD、YOLO系列等
-\subsubsection{语义分割}
-语义分割是一类特殊的目标检测任务，需要给出每个像素的分类。主要的语义分割模型包括全卷积网络（FCN）、U-Net、SegNet、DeepLab 系列、Mask R-CNN和Attention U-Net。
+基于检测的目标计数是目标检测下的一个分支。目标检测作为计算机视觉的一个主要研究方向，主要研究的是如何利用计算机视觉技术识别特定对象并确定其大小和位置。目前随着深度学习技术的发展，利用神经网络进行目标检测已经成为主流方案。主要的目标检测算法包括RCNN系列\cite{2014Richfeaturehierarchiesaccurateobjectdetectionsemanticsegmentation}\cite{2015FastRCNN}\cite{2016FasterRCNNRealTimeObjectDetectionRegionProposalNetworks}、SSD\cite{2016SSDSingleShotMultiBoxDetectorb}、YOLO系列\cite{2016YouOnlyLookOnceUnifiedRealTimeObjectDetection}\cite{2016YOLO9000BetterFasterStronger}\cite{2018YOLOv3IncrementalImprovement}等。应用这些方法，可以通过先检测出目标位置，再进一步计数从而满足目标计数的需求。
+
+这些技术虽然对于目标的识别效果相当准确，但对于数据集的要求却高了许多。这些检测方法需要目标具有精确的边界标注，这往往需要大量的高分辨率图像。在CVRC数据集中，低分辨率图像上的目标往往真人都难以识别出具体的车辆数目，往往也需要通过对照同一时间的高分辨率图像进行辅助。
+
+这些方法虽然在目标识别上极为准确，但对数据集的质量和分辨率要求非常高。它们依赖于精确的边界标注，通常需要大量的人工标注后的高分辨率图像以确保检测的准确性。但是在CVRC数据集中，只包含少量具有人工标注的高分辨率图像，其余大量数据均为低分辨率图像。这些低分辨率图像上的目标识别难度大，以至于即便是人工也难以准确识别出具体的车辆数目。在这种情况下，即使是研究人员也通常需要借助同一地点不同时间拍摄的高分辨率图像来辅助识别。
+
+除此之外，目标检测算法在处理极度拥挤或遮挡严重的环境时也面临挑战。为了解决这些问题，一些研究\cite{2023LowResolutionSelfAttentionSemanticSegmentation}开始集中于开发更加鲁棒的检测算法，这些算法可以更好地处理低质量图像和复杂场景、进一步地，为了降低对高分辨率标注数据的依赖，研究人员也在探索半监督和弱监督学习方法\cite{2023SelfsupervisedFewshotLearningSemanticSegmentationAnnotationfreeApproach}。这些方法通过利用少量标注数据与大量未标注数据，能够有效地提升模型的泛化能力和减少人工标注的工作量。此外，迁移学习技术\cite{2021TransferLearningUNetDeepLearningLungUltrasoundSegmentation}也被广泛使用，先在高分辨率图像上训练得到的模型，使用该模型在低分辨率图像的进行微调来提高目标检测性能。
+
+
 \subsubsection{基于回归的计数方法}
-这类方法从深度神经网络提取的特征中直接进行数目的回归估计，常常用于处理目标密集、相互遮挡严重的场景，如人群计数。
+基于回归的计数方法\cite{2022Crowddetectionanalysissurveillancevideosusingdeeplearning}\cite{2008PrivacypreservingcrowdmonitoringCountingpeoplepeoplemodelstracking}\cite{2009BayesianPoissonRegressionCrowdCounting}从深度神经网络提取的特征中直接进行数目的回归估计，常常用于处理目标密集、相互遮挡严重的场景，如人群计数。贝叶斯泊松回归模型\cite{2009BayesianPoissonRegressionCrowdCounting} 考虑数据的内在波动性，为估计值提供置信区间，从而增强模型在各种拥挤场景下的鲁棒性。隐私保护人群监控\cite{2008PrivacypreservingcrowdmonitoringCountingpeoplepeoplemodelstracking} 通过模糊处理技术确保在计数过程中不泄露个人信息，适用于对隐私要求严格的应用场景。Shi 等人\cite{2018CrowdCountingDeepNegativeCorrelationLearning}设计的模型通过训练多个回归器并引入负相关性来提高总体预测的准确性和泛化能力。这些方法的共同点在于它们都通过深入分析和学习图像特征来直接预测目标数量，无需进行繁琐的目标检测和识别，从而在处理极度拥挤场景时显示出显著优势。
 \subsubsection{基于密度图的计数方法}
-基于密度图的计数方法通过估计目标区域的目标密度，从而计算出数量估计。目前主要的密度图估计方法包括CSRNet、MCNN和TEDNet。
+基于密度图的计数方法通过估计目标区域的目标密度，从而计算出数量估计。为了生成像素级的密度估计图像，语义分割中的许多方法也被研究人员用以参考。主要的语义分割模型包括全卷积网络（FCN）\cite{2015FullyConvolutionalNetworksSemanticSegmentation}、U-Net\cite{ronnebergerUNetConvolutionalNetworks2015}、SegNet\cite{2016SegNetDeepConvolutionalEncoderDecoderArchitectureImageSegmentation}、DeepLab\cite{2016SemanticImageSegmentationDeepConvolutionalNetsFullyConnectedCRFs} \cite{2017DeepLabSemanticImageSegmentationDeepConvolutionalNetsAtrousConvolutionFullyConnectedCRFs}\cite{2017RethinkingAtrousConvolutionSemanticImageSegmentation}系列、Mask R-CNN\cite{2018MaskRCNN}和Attention U-Net\cite{oktayAttentionUNetLearning2018}。目前主要的密度图估计方法包括CSRNet\cite{2018CSRNetDilatedConvolutionalNeuralNetworksUnderstandingHighlyCongestedScenesa}、MCNN\cite{2016SingleImageCrowdCountingMultiColumnConvolutionalNeuralNetwork}和CrowdNet\cite{2016CrowdNetDeepConvolutionalNetworkDenseCrowdCounting}。这些方法通过使用不同架构的卷积神经网络来处理稠密场景下的复杂视觉信息，以精确地估计高密度目标如人群的密度密度。CSRNet 采用了带扩张卷积的深层网络，能够在保持有效感受野的同时，更好地捕获人群密集区域的细节信息。而MCNN 通过多列卷积结构来适应不同尺度的人群密度，这对于处理不同距离拍摄的人群图像特别有效。CrowdNet，结合浅层和深层网络架构，分别识别高低分辨率中的特征信息，来有效捕捉人群图像中的多尺度信息，从而使得模型能够在复杂的人群场景中更准确地估计人数。
+
+尽管基于密度图的方法在稠密目标数量估计问题中显示出了优越的性能，它们依然面临一些挑战。首先，这些方法往往需要大量标记数据来训练深度学习模型，而高质量的标记数据获取成本较高，尤其是在极端环境下的人群场景。此外，这些模型在遇到极端天气条件或光线不佳的情况时，性能可能会显著下降。Liu等人\cite{2018CrowdCountingusingDeepRecurrentSpatialAwareNetwork} 提出了一种通过增强数据的方法来提升模型在不同环境下的鲁棒性，该方法通过模拟不同天气和光照条件下的图像，增强了模型对这些变化的适应性。另外，Boominathan 等人\cite{2016CrowdNetDeepConvolutionalNetworkDenseCrowdCounting} 则关注模型泛化能力的提升，他们通过引入域自适应技术减少了模型对特定数据集的依赖，从而提高了模型在未见过场景中的表现。
+
 \subsubsection{跨分辨率车辆计数数据集}
-该数据集有少量高分辨率图像和拍摄于这些高分辨率图像日期之间的相同位置的低分辨率图像组成。该数据集主要关注低分辨率下的此车辆计数问题。在低分辨率下，汽车的边界极难分辨，人类在标注识别的过程中也并不容易。该数据集提供了少量拍摄了同位置的高分辨率图像作为参照。目前，已经有一些工作在这个数据集上取得了不错的效果。在本文的第三部分将进行进一步说明。
+该数据集\cite{2022VehicleCountingVeryLowResolutionAerialImagesCrossResolutionSpatialConsistencyIntraresolutionTimeContinuity}有少量高分辨率图像和拍摄于这些高分辨率图像日期之间的相同位置的低分辨率图像组成。该数据集主要关注低分辨率下的此车辆计数问题。在低分辨率下，汽车的边界极难分辨，人类在标注识别的过程中也并不容易。该数据集提供了少量拍摄了同位置的高分辨率图像作为参照。目前，已经有一些工作\cite{2022VehicleCountingVeryLowResolutionAerialImagesCrossResolutionSpatialConsistencyIntraresolutionTimeContinuity}\cite{2023Hightemporalfrequencyvehiclecountinglowresolutionsatelliteimages}在这个数据集上取得了不错的效果。在本文的第三部分将进行进一步说明。
 \section{研究目标与内容}
 \subsection{研究目标}
 \begin{enumerate}    

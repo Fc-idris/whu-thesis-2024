@@ -3,7 +3,15 @@
 \chapter{跨分辨率车辆计数数据集}
 
 \section{数据集简介}
-跨分辨率车辆计数数据集收集了日本常陆那珂港的 192 张极低分辨率图像和 8 张高分辨率图像，日期范围为 2016 年至 2019 年。其中LR 图像是www.planet.com 下载的，由 PlanetScope 卫星拍摄，地面分辨率为每像素 3m。为了起到监督作用，HR 图像是在根据相应 LR 图像的日期选择的，这些图像是从 WorldView 捕获的，地面分辨率为每像素 30 厘米。 
+跨分辨率车辆计数数据集\cite{2022VehicleCountingVeryLowResolutionAerialImagesCrossResolutionSpatialConsistencyIntraresolutionTimeContinuity} 收集了日本常陆那珂港的 192 张极低分辨率图像和 8 张高分辨率图像，日期范围为 2016 年至 2019 年。\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{dataset.png}
+    \caption{数据集概览}
+    \label{fig:dataset}
+\end{figure} 
+
+其中LR 图像是www.planet.com 下载的，由 PlanetScope 卫星拍摄，地面分辨率为每像素 3m。为了起到监督作用，HR 图像是在根据相应 LR 图像的日期选择的，这些图像是从 WorldView 捕获的，地面分辨率为每像素 30 厘米。
+
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{CRVCtime.png}
