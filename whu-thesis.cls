@@ -190,14 +190,15 @@
 \RequirePackage { physics }
 \RequirePackage { siunitx }
 
-\RequirePackage { algorithm2e }     % 算法代码
-\tl_set:Nn \algorithmcfname { 算法 }
-\SetAlCapSty {}
-\SetAlCapFnt {}
+\usepackage[ruled,linesnumbered,boxed]{algorithm2e}   % 算法代码
+\tl_set:Nn \algorithmcfname { \bfseries\zihao{5}算法 }
+\newcommand{\algocapfont}{\zihao{5}\songti}
+\SetAlCapFnt{\algocapfont}
+\SetAlCapNameFnt{\algocapfont}
 \box_new:N \l__whu_space_box
 \hbox_set:Nn \l__whu_space_box { \nobreakspace }
-\SetAlgoCaptionSeparator
-  { \hbox_to_wd:nn { 1 em - \box_wd:N \l__whu_space_box } {} }
+\SetAlgoCaptionSeparator{}
+  % { \hbox_to_wd:nn { 1 em - \box_wd:N \l__whu_space_box } {} }
 % 算法标题后会跟一个不间断空格 ~，这里将其宽度减掉
 
 %%% ---- 定义页面样式 ----- %%%
@@ -240,7 +241,7 @@
       }
     \tl_if_eq:NnT \g__whu_option_type_tl { bachelor }
       {
-        \tl_gset:Nn \g__whu_head_odd_tl { \hbox_to_wd:nn { 9 cm }{武汉大学本科毕业论文（设计）} }
+        \tl_gset:Nn \g__whu_head_odd_tl { \hbox_to_wd:nn { 8 cm }{武汉大学本科毕业论文（设计）} }
         \tl_gremove_all:Nn \g__whu_head_odd_tl { \\ }
         \tl_gset:Nn \g__whu_head_even_tl { 武汉大学本科毕业论文（设计）}
       }
@@ -265,7 +266,7 @@
         \fancypagestyle { plain }
           {
             \fancyhf {}
-            \tl_set:Nn \headrulewidth { 1pt }  % 页眉线宽
+            \tl_set:Nn \headrulewidth { 0.5pt }  % 页眉线宽
             \fancyfoot [ C ] { \zihao { 5 } \thepage }
             \fancyhead [ C ] { \zihao { 5 } \g__whu_head_odd_tl }
           }
@@ -284,8 +285,8 @@
     subsection     =
       {
         format     = { \heiti \zihao { -4 }      },
-        beforeskip = { 0.5 \c__whu_baseline_skip },
-        afterskip  = { 0.5 \c__whu_baseline_skip },
+        beforeskip = { 0.3 \c__whu_baseline_skip },
+        afterskip  = { 0.1 \c__whu_baseline_skip },
       },  % 二级标题 黑体小 4 号
     subsubsection  =
       {
@@ -309,7 +310,7 @@
         beforeskip = { 0.5 \c__whu_baseline_skip             },
         afterskip  = { 0.5 \c__whu_baseline_skip             },
       },
-    tocdepth       = 3,  % 目录层级数
+    tocdepth       = 2,  % 目录层级数
     secnumdepth    = 5,  % 标题层级数
   }
 \tl_if_eq:NnF \g__whu_option_type_tl { opening }
@@ -321,7 +322,7 @@
             format     = { \centering \heiti \zihao { -2 } },
             number     = { \arabic { chapter }             },
             name       = { ,                               },
-            beforeskip = { 0.8 \c__whu_baseline_skip       },
+            beforeskip = { -25pt       },
             afterskip  = { 0.5 \c__whu_baseline_skip       },
           }  % 各章标题 黑体小 2 号
       }
@@ -346,7 +347,10 @@
 \clist_map_inline:nn { bachelor  }
   {
     \tl_if_eq:NnT \g__whu_option_type_tl {#1}
-      { \tocloftpagestyle { frontmatter } }
+      { 
+      \tocloftpagestyle { frontmatter } 
+      \setlength{\cftbeforechapskip}{0pt}
+      }
   }
 
 \tl_set:Nn \contentsname   { 目 \qquad 录 }
@@ -384,20 +388,24 @@
         \skip_zero:N \cftbeforechapskip
       }
       {
-        \tl_set:Nn \cftchapfont { \heiti \zihao { 4 } }
-        \tl_set:Nn \cftchappagefont { \zihao { 5 } }
+        \tl_set:Nn \cftchapfont { \bfseries \songti \zihao { -4 } }
+        \tl_set:Nn \cftchappagefont { \zihao { -4 } }
       }
   }
 
 %%% ---- 图表标题 ----- %%%
 \RequirePackage { subcaption }
 % 图表标题设置
-\RequirePackage [ labelsep = quad ] { caption } % 序号之后空一格写标题
-% 设置表格标题字体为黑体, 设置图标题字体为宋体
+\RequirePackage [ labelsep = space ] { caption } % 序号之后空一格写标题
+% 设置表格标题字体为宋, 设置图标题字体为宋体
+\DeclareCaptionFormat{whu}{{\songti\bfseries#1}#2#3\songti}
+\captionsetup[figure]{format=whu}
+\captionsetup[table]{format=whu}
+
 \DeclareCaptionFont { whutablecap  }
-  { \heiti \addCJKfontfeatures { BoldFont = * } \bfseries \zihao { -4 } }
+  { \songti \zihao { 5 } }
 \DeclareCaptionFont { whufigurecap }
-  { \songti \zihao { -4 } }
+  { \songti \zihao { 5} }
 \captionsetup [ table ]
   {
     name = 表,
@@ -442,7 +450,11 @@
       { \AtBeginEnvironment {##1} { \zihao { 5 } } }
   }
 % 将表格内容字体设为五号
-
+\cs_new_protected:Npn \__whu_set_figure_font:
+  {
+       \AtBeginEnvironment{figure}{\zihao{5}\songti}
+  }
+% 将图内容字体设为五号
 % 列表样式
 \RequirePackage [ inline ] { enumitem }
 \setlist { nosep }
@@ -544,8 +556,8 @@
 % 中文字体
 \cs_new_protected:Npn \__whu_set_cjk_font_song:nn #1#2
   {
-    \setCJKmainfont {#1} [#2]
-    \newCJKfontfamily { \songti } {#1} [#2]
+    \setCJKmainfont {#1}[AutoFakeBold = 3]
+    \newCJKfontfamily { \songti } {#1}[AutoFakeBold = 3]
   }
 \cs_new_protected:Npn \__whu_set_cjk_font_hei:nn #1#2
   {
@@ -773,7 +785,7 @@
 \cs_generate_variant:Nn \__whu_date_parse:n { V }
 
 \tl_if_eq:NnTF \g__whu_option_type_tl { bachelor }
-  { \skip_const:Nn \c__whu_baseline_skip { 23 pt } }
+  { \skip_const:Nn \c__whu_baseline_skip { 22.832 pt } }
   {
     \tl_if_eq:NnTF \g__whu_option_type_tl { opening }
       { \skip_const:Nn \c__whu_baseline_skip { 23 pt } }
@@ -824,7 +836,7 @@
     major          .tl_gset:N    = \g__whu_info_major_tl,
     direction      .tl_gset:N    = \g__whu_info_direction_tl,
     date           .tl_gset:N    = \g__whu_info_date_tl,
-    advisor-name   .tl_gset:N    = \g__whu_info_advisor_name,
+    advisor-name   .tl_gset:N    = \g__whu_info_advisor_name_tl,
     advisor        .clist_gset:N = \g__whu_info_advisor_clist,
     keywords       .clist_gset:N = \g__whu_info_keywords_clist,
     keywords *     .clist_gset:N = \g__whu_info_keywords_en_clist,
@@ -1159,11 +1171,11 @@
       % \par \skip_vertical:n { 6 em }
 
       \par \skip_vertical:n { 2 cm }
-      \includegraphics [ width = 5.5 cm ] { data / whu.pdf }
+      \includegraphics [ width = 5 cm ] { data / whu.pdf }
       \par \skip_vertical:n { 1.5 cm }
       { \songti \zihao { 2 } \textbf {\c__whu_heading_tl} }
       \par \skip_vertical:n { 4 em }
-      \begin { minipage } [ c ] [ 6 cm ] { \textwidth }
+      \begin { minipage } [ c ] [ 4 cm ] { \textwidth }
         \skip_set:Nn \baselineskip { 32 pt }
         \centering { \kaishu \zihao { 1 } \g__whu_info_title_tl }
       \end { minipage }
@@ -1179,12 +1191,13 @@
             [ 0.5 em ]
           \__whu_spread_with:nn{ 学院 }{ \hfill } & \__whu_spread_with:nn{\g__whu_info_school_tl}{ \hfill } \\ 
             [ 0.5 em ]
-          \__whu_spread_with:nn { 指导教师 } { \hfill } & \__whu_spread_with:nn{\g__whu_info_advisor_name} { \hfill }\\ 
+          \__whu_spread_with:nn { 指导教师 } { \hfill } & \__whu_spread_with:nn{\g__whu_info_advisor_name_tl} { \hfill }\\ 
             [ 0.5 em ]
         \end { tabular }
       \group_end:
-      \vfill
-      { \songti \zihao { -2 } \__whu_date_parse:V { \g__whu_info_date_tl } }
+      %\vfill
+      \par \skip_vertical:n { 12 em }
+      { \songti \zihao { 4 } \__whu_date_parse:V { \g__whu_info_date_tl } }
     \end { center }
     \__whu_new_chapter_page:
   }
@@ -1313,7 +1326,7 @@
     \hfill
     \hbox_to_wd:nn { 7cm }
     {
-    日期：{ \hbox_to_wd:nn { 4.5 cm } {\hbox_to_wd:nn { 1.5cm }{} 年月日 \hbox_to_wd:nn { 0.5cm }{}} }
+    日期：{ \hbox_to_wd:nn { 4.9 cm } {\hbox_to_wd:nn { 1.7cm }{} 年月日 \hbox_to_wd:nn { 0.4cm }{}} }
     }
     \hbox_to_wd:nn { 3cm } 
     {  }
@@ -1346,7 +1359,7 @@
     \hfill
     \hbox_to_wd:nn { 7cm }
     {
-    日期：{ \hbox_to_wd:nn { 4.5 cm } {\hbox_to_wd:nn { 1.5cm }{} 年月日 \hbox_to_wd:nn { 0.5cm }{}} }
+    日期：{ \hbox_to_wd:nn { 4.9 cm } {\hbox_to_wd:nn { 1.7cm }{} 年月日 \hbox_to_wd:nn { 0.4cm }{}} }
     }
     \hbox_to_wd:nn { 3cm } 
     {  }
@@ -1464,10 +1477,10 @@
       {
         \chapter * { 摘 \qquad 要 }
         \phantomsection
-        \clist_map_inline:nn { doctor , master }
+        \clist_map_inline:nn { doctor , master, bachelor }
           {
             \tl_if_eq:NnT \g__whu_option_type_tl {##1}
-              { \addcontentsline { toc } { chapter } { 摘 \qquad 要 } }
+              { \addcontentsline { toc } { chapter } { 摘要 } }
           }
         \tl_if_eq:NnT \g__whu_option_type_tl { bachelor }
           { \thispagestyle { frontmatter } }
@@ -1477,7 +1490,7 @@
 
         \skip_vertical:N \c__whu_baseline_skip \par
         \__whu_put_keywords:nn
-          { \heiti \zihao { -4 } 关键词：\hbox:n {} }
+          { \songti \bfseries \zihao { -4 } 关键词：\hbox:n {} }
           { \clist_use:Nn \g__whu_info_keywords_clist { ； } }
       }
     % 英文摘要
@@ -1485,10 +1498,10 @@
       {
         \chapter * { \textbf { ABSTRACT } }
         \phantomsection
-        \clist_map_inline:nn { doctor , master }
+        \clist_map_inline:nn { doctor , master, bachelor }
           {
             \tl_if_eq:NnT \g__whu_option_type_tl {##1}
-              { \addcontentsline { toc } { chapter } { ABSTRACT } }
+              { \addcontentsline { toc } { chapter } { \textbf {ABSTRACT} } }
           }
         \tl_if_eq:NnT \g__whu_option_type_tl { bachelor }
           { \thispagestyle { frontmatter } }
@@ -1496,7 +1509,7 @@
         \file_input:V \g__whu_element_abstract_en_tl
         \skip_vertical:N \c__whu_baseline_skip \par
         \__whu_put_keywords:nn
-          { \bfseries \zihao { -4 } Key ~ words: ~ }
+          { \bfseries \zihao { -4 } Keywords: ~ }
           { \clist_use:Nn \g__whu_info_keywords_en_clist { ; ~ } }
       }
     \__whu_new_chapter_page:

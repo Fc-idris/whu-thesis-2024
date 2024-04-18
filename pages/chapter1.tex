@@ -1,33 +1,47 @@
 % Chapter 1
 
 \chapter{绪论}
-随着遥感技术的快速发展，我们能获得到越来越丰富的遥感观测数据。既有高分辨率的清晰图像，也包括低分辨率的鸟瞰图。这些图像从更宏观的视角为我们提供了许多有价值的数据。然而如何合理的使用这些图像数据，特别是从低分辨率图像中找出更多难以通过人类肉眼直接识别出的有效信息成为了一个重要的研究课题。在车辆计数等真实场景中，高分辨率图像虽然能提供丰富的细节，但有着获取成本高昂以及难以获取稳定连续的高频率数据的问题。本文在CRVC跨分辨率车辆计数数据集上，设计了一种基于注意力机制的深度学习U型网络模型，旨在提高跨分辨率遥感图像中隐含的空间和时间信息进行更丰富全面的表示，以进一步提升目标计数的准确性。
+随着遥感技术的快速发展，我们能获得到越来越丰富的遥感观测数据。既有高分辨率的清晰图像，也包括低分辨率的鸟瞰图。这些图像从更宏观的视角为我们提供了许多有价值的数据。然而如何合理的使用这些图像数据，特别是从低分辨率图像中找出更多难以通过人类肉眼直接识别出的有效信息成为了一个重要的研究课题。在车辆计数等真实场景中，高分辨率图像虽然能提供丰富的细节，但有着获取成本高昂以及难以获取稳定连续的高频率数据的问题。本文在跨分辨率车辆计数数据集（Cross Resolution Vehicle Counting,CVRC）\cite{2022VehicleCountingVeryLowResolutionAerialImagesCrossResolutionSpatialConsistencyIntraresolutionTimeContinuity}上，设计了一种基于注意力机制\cite{2023AttentionAllYouNeed}的深度学习U型网络模型，旨在提高跨分辨率遥感图像中隐含的空间和时间信息进行更丰富全面的表示，以进一步提升目标计数的准确性。
 \section{研究背景与意义}
 \subsection{高分辨率和低分辨率遥感图像简介}
-在遥感领域，分辨率是用来描述遥感图像细节程度的一个重要指标，根据遥感卫星搭载的传感器不同，可以从多个维度进行描述，包括空间分辨率、时间分辨率、光谱分辨率和辐射分辨率。在讨论高分辨率（High Resolution, HR）图像和低分辨率（Low Resolution, LR）图像时，通常指的是空间分辨率的差异。空间分辨率的详细定义可以参照\cite{MultispectralImageAnalysisUsingObjectOrientedParadigm}:
-（i）低或粗分辨率定义为地面采样距离（GSD）为 30 m 或更大的像素，（ii）中分辨率是 GSD范围为 2.0–30 m，(iii) 高分辨率为 GSD 0.5–2.0 m，以及 (iv) 极高分辨率为像素大小 <0.5 m
+在遥感领域，分辨率是用来描述遥感图像细节程度的一个重要指标，根据遥感卫星搭载的传感器不同，可以从多个维度进行描述，包括空间分辨率、时间分辨率、光谱分辨率和辐射分辨率。
 
-本文中将该定义简化，只进行高分辨率与低分辨图像的区分。
+空间分辨率指的是传感器能够区分的最小地面单元的尺寸，也称为地面采样距离（Ground Sample Disrance,GSD）。例如，如果一个卫星图像的空间分辨率是10米，那么图像上的一个像素代表真实世界中10米 x 10米的区域。空间分辨率越高（即图像中单个像素所代表的地面面积较小），图像的细节就越丰富，能够观察到更小的对象。
+
+时间分辨率定义为重新访问并获取同一地点数据的所需的时间。重访周期是指卫星完成一个完整轨道周期所需的时间长度。因此，遥感系统第二次以相同视角对完全相同的区域进行成像的绝对时间分辨率等于该周期。然而，由于大多数卫星相邻轨道的成像带存在一定程度的重叠，并且这种重叠随着纬度的增加而增加，地球的某些区域往往会更频繁地重新成像。因此，传感器的实际时间分辨率取决于多种因素，包括卫星/传感器能力、测绘带重叠和纬度。
+
+光谱分辨率描述的是遥感设备能够在电磁光谱中区分不同波长的能力。通常可以使用非常宽的波长范围（可见光和近红外）来区分广泛的类别，例如水和植被。其他更具体的类别，例如不同的岩石类型，就需要高光谱分辨率传感器在更精细的波长范围内进行比较才能将它们分开。
+
+辐射分辨率描述的是遥感设备检测不同能级（亮度）的能力。不同传感器对电磁能大小的敏感度决定了辐射分辨率。传感器的辐射分辨率越精细，它对检测反射或发射能量的微小差异就越敏感。这对于分析物体的热特性、地表材料的性质等非常有帮助。
+
+
+在讨论高分辨率（High Resolution, HR）图像和低分辨率（Low Resolution, LR）图像时，通常指的是空间分辨率的差异。空间分辨率的详细分类可以参照\cite{MultispectralImageAnalysisUsingObjectOrientedParadigm}:
+\begin{enumerate}
+    \item 低分辨率定义为地面采样距离为 30 m 或更大
+    \item 中分辨率的地面采样距离范围为 2–30 m
+    \item 高分辨率的地面采样距离范围为0.5–2 m
+    \item 极高分辨率的地面采样距离范围 <0.5 m
+\end{enumerate}
+
 \subsubsection{高分辨率图像}
-高分辨率图像通常指具有较高空间分辨率的图像，即图像中单个像素所代表的地面面积较小，能够显示更加精细的地面特征\cite{shimizu1983laser}。高分辨率图像使得用户可以观察到较小的地面对象，例如单个车辆、道路标线甚至是行人。虽然“高分辨率”这个术语没有绝对的定义，但在遥感领域，我们把空间分辨率小于1米（通常在0.3米到1米之间）的图像常被认为是高分辨率图像。目前我们可以使用的高分辨率遥感图像来源主要有：航空摄影（搭载高分辨率摄像机或低空高分辨率无人机拍摄的数据）和某些高性能的卫星遥感仪器，例如WorldView系列\cite{scitor2000project}、GeoEye-1、QuickBird等。
+高分辨率图像通常指具有较高空间分辨率的图像，即图像中单个像素所代表的地面面积较小，能够显示更加精细的地面特征\cite{shimizu1983laser}。高分辨率图像使得用户可以观察到较小的地面对象，例如单个车辆、道路标线甚至是行人。虽然“高分辨率”这个术语没有绝对的定义，但在遥感领域，我们把空间分辨率小于1米（通常在0.3米到1米之间）的图像常被认为是高分辨率图像。目前我们可以使用的高分辨率遥感图像来源主要有：航空摄影（搭载高分辨率摄像机或低空高分辨率无人机拍摄的数据）和某些高性能的卫星遥感仪器，例如WorldView系列\cite{scitor2000project}、GeoEye、QuickBird等。
 高分辨率图像中的精细地面特征信息，在城市规划、交通监控、农业监测（如作物健康分析）、详细的地物分类、灾害评估等领域都有广泛的使用。特别是在目标识别领域中，高分辨率的图像可以使用深度学习中多种模型和方法，具有很高的应用价值。
 
 
 \subsubsection{低分辨率图像}
 
-低分辨率图像指的是空间分辨率较低的图像，即图像中单个像素所代表的地面面积较大，只能显示较为粗糙的地面特征。低分辨率图像难以分辨较小的地面对象，但适合于观察大范围的地表变化。通常空间分辨率大于10米（如10米、30米或更大）的图像被认为是低分辨率图像。低分辨率图像主要来源于具有宽幅覆盖能力的卫星遥感仪器，如MODIS（具有数百米的空间分辨率）、Landsat系列（15米到30米分辨率）、Sentinel-2（10米到60米分辨率）等。图像中的大范围地表特征，在气候变化研究、大范围土地覆盖变化监测、环境监测、城市发展规划、海洋和大气研究等领域有着很高的应用价值。对于目标识别以及目标计数领域来说，模糊的图像质量大大加大了现有深度学习模型的识别难度。
+低分辨率图像指的是空间分辨率较低的图像，即图像中单个像素所代表的地面面积较大，只能显示较为粗糙的地面特征。低分辨率图像难以分辨较小的地面对象，但适合于观察大范围的地表变化。通常空间分辨率大于10米（如10米、30米或更大）的图像被认为是低分辨率图像。低分辨率图像主要来源于具有宽幅覆盖能力的卫星遥感仪器，如MODIS（具有数百米的空间分辨率）、Landsat系列（15米到30米分辨率）、Sentinel-2（10米到60米分辨率）等。图像中的大范围地表特征，在气候变化研究、大范围土地覆盖变化监测、环境监测、城市发展规划、海洋和大气研究等领域有着很高的应用价值。
+
+对于不同任务，识别目标的大小不尽相同，对于图像分辨率的要求也随之变化。对于房屋的识别需要2-5米的分辨率，识别车辆需要1米以内的分辨率，行人的识别则需要0.3米或者更高。本文讨论的CVRC数据集是车辆识别数据集，将分辨率大于等于1米的图像认定为低分辨率图像，小于1米的视为高分辨率图像。对于目标识别以及目标计数领域来说，模糊的图像使得目标的轮廓极为模糊，稠密目标轮廓间的重叠更加大了模型识别的难度。
 
 
 \subsubsection{重访周期与成本}
-
-
-
 
 对于遥感卫星而言，其拍摄影像的分辨率是由传感器在地面采样的间隔决定的，即每个传感器探测元件在地面投影的大小，称为地面采样距离（Ground Sample Disrance,GSD）。在理想状况下，地面采样距离可以通过下式计算:
 \begin{equation}
     GSD = {\frac{dR}{f}} \label{eq:GSD}​​​​
 \end{equation}
-其中d为传感器探测元件的宽度，R为传感器距离地面高度，\(f\)为光学系统焦距.
+其中\(d\)为传感器探测元件的宽度，\(R\)为传感器距离地面高度，\(f\)为光学系统焦距.
 
 通过万有引力定律和开普勒第三定律，可推出遥感卫星绕地球旋转的周期与轨道半径之间的关系。
 \begin{equation}
@@ -59,11 +73,10 @@
 
 \section{国内外研究现状}
 \subsection{跨分辨率遥感影像目标计数现状}
-高分辨率图像计数主要有两类方法。一类是检测方法，通过识别出具体的物体位置来进一步计数。另一种是计数类方法，直接估计图像中对应物体的数目。
-\subsubsection{目标检测}
-基于检测的目标计数是目标检测下的一个分支。目标检测作为计算机视觉的一个主要研究方向，主要研究的是如何利用计算机视觉技术识别特定对象并确定其大小和位置。目前随着深度学习技术的发展，利用神经网络进行目标检测已经成为主流方案。主要的目标检测算法包括RCNN系列\cite{2014Richfeaturehierarchiesaccurateobjectdetectionsemanticsegmentation}\cite{2015FastRCNN}\cite{2016FasterRCNNRealTimeObjectDetectionRegionProposalNetworks}、SSD\cite{2016SSDSingleShotMultiBoxDetectorb}、YOLO系列\cite{2016YouOnlyLookOnceUnifiedRealTimeObjectDetection}\cite{2016YOLO9000BetterFasterStronger}\cite{2018YOLOv3IncrementalImprovement}等。应用这些方法，可以通过先检测出目标位置，再进一步计数从而满足目标计数的需求。
+高分辨率图像计数主要有三类方法。基于检测的计数方法通过识别出具体的物体位置来进一步计数。基于回归的计数类方法通过学习出图像与图像中对应物体的数目的对应关系，从而估计出目标数目。基于密度图的计数方法生成图像对应的密度图，通过密度分布求和计算出最终的数量估计。
 
-这些技术虽然对于目标的识别效果相当准确，但对于数据集的要求却高了许多。这些检测方法需要目标具有精确的边界标注，这往往需要大量的高分辨率图像。在CVRC数据集中，低分辨率图像上的目标往往真人都难以识别出具体的车辆数目，往往也需要通过对照同一时间的高分辨率图像进行辅助。
+\subsubsection{基于检测的计数方法}
+基于检测的目标计数是目标检测下的一个分支。目标检测作为计算机视觉的一个主要研究方向，主要研究的是如何利用计算机视觉技术识别特定对象并确定其大小和位置。目前随着深度学习技术的发展，利用神经网络进行目标检测已经成为主流方案。主要的目标检测算法包括RCNN系列\cite{2014Richfeaturehierarchiesaccurateobjectdetectionsemanticsegmentation}\cite{2015FastRCNN}\cite{2016FasterRCNNRealTimeObjectDetectionRegionProposalNetworks}、SSD\cite{2016SSDSingleShotMultiBoxDetectorb}、YOLO系列\cite{2016YouOnlyLookOnceUnifiedRealTimeObjectDetection}\cite{2016YOLO9000BetterFasterStronger}\cite{2018YOLOv3IncrementalImprovement}等。应用这些方法，可以通过先检测出目标位置，再进一步计数从而满足目标计数的需求。
 
 这些方法虽然在目标识别上极为准确，但对数据集的质量和分辨率要求非常高。它们依赖于精确的边界标注，通常需要大量的人工标注后的高分辨率图像以确保检测的准确性。但是在CVRC数据集中，只包含少量具有人工标注的高分辨率图像，其余大量数据均为低分辨率图像。这些低分辨率图像上的目标识别难度大，以至于即便是人工也难以准确识别出具体的车辆数目。在这种情况下，即使是研究人员也通常需要借助同一地点不同时间拍摄的高分辨率图像来辅助识别。
 
@@ -77,8 +90,105 @@
 
 尽管基于密度图的方法在稠密目标数量估计问题中显示出了优越的性能，它们依然面临一些挑战。首先，这些方法往往需要大量标记数据来训练深度学习模型，而高质量的标记数据获取成本较高，尤其是在极端环境下的人群场景。此外，这些模型在遇到极端天气条件或光线不佳的情况时，性能可能会显著下降。Liu等人\cite{2018CrowdCountingusingDeepRecurrentSpatialAwareNetwork} 提出了一种通过增强数据的方法来提升模型在不同环境下的鲁棒性，该方法通过模拟不同天气和光照条件下的图像，增强了模型对这些变化的适应性。另外，Boominathan 等人\cite{2016CrowdNetDeepConvolutionalNetworkDenseCrowdCounting} 则关注模型泛化能力的提升，他们通过引入域自适应技术减少了模型对特定数据集的依赖，从而提高了模型在未见过场景中的表现。
 
-\subsubsection{跨分辨率车辆计数数据集}
-该数据集\cite{2022VehicleCountingVeryLowResolutionAerialImagesCrossResolutionSpatialConsistencyIntraresolutionTimeContinuity}有少量高分辨率图像和拍摄于这些高分辨率图像日期之间的相同位置的低分辨率图像组成。该数据集主要关注低分辨率下的此车辆计数问题。在低分辨率下，汽车的边界极难分辨，人类在标注识别的过程中也并不容易。该数据集提供了少量拍摄了同位置的高分辨率图像作为参照。目前，已经有一些工作\cite{2022VehicleCountingVeryLowResolutionAerialImagesCrossResolutionSpatialConsistencyIntraresolutionTimeContinuity}\cite{2023Hightemporalfrequencyvehiclecountinglowresolutionsatelliteimages}在这个数据集上取得了不错的效果。在本文的第三部分将进行进一步说明。
+上述几种方法在大型高分辨率图像数据集下均有着不错的表现。但对于CRVC数据集来讲，由于高分辨率图像的稀缺，这些方法不能很好的完成CRVC数据集中的任务。如何通过少量高分辨率图像信息指导改进大量低分辨率图像上估计的结果成为模型设计的关键。
+
+\subsection{跨分辨率车辆计数数据集}
+跨分辨率车辆计数数据集\cite{2022VehicleCountingVeryLowResolutionAerialImagesCrossResolutionSpatialConsistencyIntraresolutionTimeContinuity} （CRVC）收集了日本常陆那珂港的 192 张极低分辨率图像和 8 张高分辨率图像，日期范围为 2016 年至 2019 年。\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{dataset.png}
+    \caption{数据集概览}
+    \label{fig:dataset}
+\end{figure} 
+
+其中LR 图像是www.planet.com 下载的，由 PlanetScope 卫星拍摄，地面分辨率为每像素 3m。为了起到监督作用，HR 图像是在根据相应 LR 图像的日期选择的，这些图像是从 WorldView 捕获的，地面分辨率为每像素 30 厘米。
+
+
+\subsubsection{数据集分析}  
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{CRVCtime.png}
+    \caption{数据的日期和时间分布}
+    \label{fig:CRVCtime}
+\end{figure}
+图 ~\ref{fig:CRVCtime} 显示了数据集中LR和HR图像采集的日期和时间分布。可以观察到，数据的分布并不平均，主要集中在2017年5月至2019年7月之间。就8张高分辨率图像的日期而言，它们之间的时间间隔最小为 6 天，最大为 17 个月。 如表格~\ref{tab:date}中数据所示，HR 图像和相应 LR 图像之间的采集时间并不完全一致，平均采集时间差异为 39 分钟。在这种情况下，我们认为短时间内的HR和LR图像中的车辆数目一致。这一假设和实际情况相符并大大降低了建模难度。 
+\begin{table}[h]
+    \centering
+    \caption{HR和LR图像的获取日期与时间}
+    \label{tab:date}
+    \begin{tabularx}{\textwidth}{CCCC}
+      \toprule
+      日期 & HR拍摄时间 & LR拍摄时间  \\
+      \midrule
+      4th January, 2016    & 10:56  &10:36\\
+      26th June, 2017      &10:24   & 9:34\\
+      2nd July, 2017       &10:20   & 9:36\\
+      9rth July, 2017      &10:34   & 9:44\\
+      15th July, 2017      &10:30   & 9:41\\
+      9th November, 2017   &10:25   & 9:42\\
+      19th December, 2018  &10:46   & 9:56\\
+      6th June, 2019       &10:35   &10:29\\
+      \bottomrule
+    \end{tabularx}
+\end{table}
+
+
+\subsubsection{高分辨率图像处理}  
+为了进行计数任务，该数据集在HR图像上标注了车辆的边界及类别。HR图像上标注框的数量作为对应日期的LR图像的真值。标注的边界则作为停车场位置的空间提示信息。该数据集中总共注释了 37852 个车辆实例，包含四类车辆，包括轿车、小型卡车、大型卡车和起重机（图~\ref{fig:vehicle}）。不同类别的车辆在尺寸形状上有着很大的不同，分类计数有助于提升计数质量。  各类车辆数量极不平衡，分别为轿车35844辆、小型货车737辆、大型货车1211辆、起重机60辆。 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{vehicle.png}
+    \caption{HR图像车辆标注及分类}
+    \label{fig:vehicle}
+\end{figure}
+
+\subsubsection{低分辨率图像处理}  
+数据集中共包含192张低分辨率图像。这些图像在2016至2019年之间被采集，主要分布在2017年6月至2019年8月之间，其中61.5\%的采集间隔在两天以内。如图~\ref{fig:CRVCtime}所示，低分辨率图像的采集时间均为日间，大部分图像拍摄于上午9点到10点。我们可以认为这些图像具有相似的拍摄条件。
+不同于高分辨率图像，低分辨率图像的标注要困难的多。因为难以在低分辨率的条件下辨认清晰的车辆轮廓，所以标注车辆覆盖率是一个更可行的方法。由于低分辨率图像的视场较大，车辆区域只占图像中很小的一部分。因此先在HR图像中划出9个区域（图~\ref{fig:9parkHR}），在LR图像中对应位置进行覆盖率估计（图~\ref{fig:9parkpair}）。
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\linewidth]{9parkpair.png}
+        \caption{区域2对应的HR和LR图像}
+        \label{fig:9parkpair}
+    \end{subfigure}
+    \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\linewidth]{9parkHR.png}
+      \caption{9个停车区域}
+      \label{fig:9parkHR}
+    \end{subfigure}\quad % 添加一些间隔
+    
+\end{figure}
+
+% \begin{figure}[h]
+%     \centering
+%     \begin{subfigure}{\textwidth}
+%         \centering
+%         \includegraphics[width=0.6\linewidth]{9parkpair.png} % 调整宽度以适应你的需求
+%         \caption{区域2对应的HR和LR图像}
+%         \label{fig:9parkpair}
+%     \end{subfigure}
+    
+%     \begin{subfigure}{\textwidth}
+%       \centering
+%       \includegraphics[width=0.6\linewidth]{9parkHR.png} % 调整宽度以适应你的需求
+%       \caption{9个停车区域}
+%       \label{fig:9parkHR}
+%     \end{subfigure}
+    
+%     % \caption{这是两个子图的总标题。}
+%     \label{fig:combinedfigure}
+% \end{figure}
+
+
+
+低分辨率图像可以分为两类，有对应高分辨率图像的和没有对应高分辨率图像的。对于前者而言，直接从对应高分辨率标注结果中计算覆盖率即可。那些没有HR图像对应的LR图像则由多名专家进行视觉标注并取平均值。
+
+
+\subsubsection{数据集特性分析}  
+通过上述对数据集的分析，我们可以看到高分辨率图像和与其对应的低分辨率图像之间间隔时间不大，同时对应的是同一位置。因此我们可以认为在它们上进行的目标计数结果应当也相同。两者所映射的空间信息应该具有一致性，这也给后续处理方法提供了思路。如何应用高分辨率图像信息指导改进低分辨率图像上估计的结果成为提高估计精度的关键节点之一。
+
+同时单一的低分辨率图像很难得出合理的目标计数估计，然而由于低分辨率遥感图像的短重访周期，我们能得到一段连续的低分辨率图像。比较相邻图像间的变化或者从多个图像间进行学习，可以补充那些单张图像因低分辨率造成的信息缺失。图像间的时间连续性也是指导改进图像计数估计结果的关键因素。
+
 \section{研究目标与内容}
 \subsection{研究目标}
 \begin{enumerate}    
@@ -96,4 +206,4 @@
 \end{enumerate}
 
 \section{章节安排}
-第一章为绪论，整体介绍研究背景及研究内容。第二章为目标计数方法计数框架，详细解释了目标计数领域的方法细节。第三章为跨分辨率车辆计数数据集介绍，包括了数据的组成、分布以及对数据性质的初步分析。第四章介绍了基于注意力机制的跨分辨率遥感影像计数方法，详细解释了基于注意力机制的深度学习网络设计细节。
+第一章为绪论，整体介绍研究背景及研究内容。第二章为目标计数方法计数框架，详细解释了目标计数领域的方法细节。第三章介绍了基于注意力机制的跨分辨率遥感影像计数方法，详细解释了基于注意力机制的深度学习网络设计细节。第四章设计了多组实验从分割精度、覆盖率估计和回归计数结果这三个方面测试了模型的性能。第五章对本设计做出总结和展望。
