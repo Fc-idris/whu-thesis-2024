@@ -1529,6 +1529,7 @@
     \__whu_make_thanks:
     \__whu_make_appendix:
     \__whu_make_spine:
+    \__whu_make_backcover:
   }
 
 \cs_new_protected:Npn \__whu_make_back_matter_master:
@@ -1536,6 +1537,7 @@
     \__whu_make_bibliography:
     \__whu_make_appendix:
     \__whu_make_thanks:
+    \__whu_make_backcover:
   }
 
 \cs_new_protected:Npn \__whu_make_back_matter_bachelor:
@@ -1543,6 +1545,7 @@
     \__whu_make_bibliography:
     \__whu_make_thanks:
     \__whu_make_appendix:
+    \__whu_make_backcover:
   }
 
 \cs_new_protected:Npn \__whu_make_back_matter_opening:
@@ -1680,4 +1683,12 @@
     \sys_if_platform_windows:TF
       { \sys_shell_now:x { del ~ \c_sys_jobname_str - spine.tex } }
       { \sys_shell_now:x { rm ~ \c_sys_jobname_str - spine.tex } }
+  }
+
+  \cs_new_protected:Npn \__whu_make_backcover:
+  {
+    \__whu_new_chapter_page:
+    \null
+    \thispagestyle{empty}
+    \newpage  
   }
