@@ -4,7 +4,7 @@
 \section{深度学习基础理论}
 目前主要的目标识别以及计数方法基于深度学习模型设计的，本小节介绍本文模型涉及到的深度学习相关理论。
 \subsection{卷积层}
-对于CRVC数据集中的图像数据，常使用卷积层\cite{2020ImageSegmentationUsingDeepLearningSurvey}\cite{2012ImageNetClassificationDeepConvolutionalNeuralNetworks}来进行特征提取。卷积层具有的平移不变性和局部性非常适合处理图像数据，可以掌握图像的空间特征。下面给出卷积层的基本定义。
+对于CRVC数据集中的图像数据，常使用卷积层\cite{minaee2021image,2012ImageNetClassificationDeepConvolutionalNeuralNetworks}来进行特征提取。卷积层具有的平移不变性和局部性非常适合处理图像数据，可以掌握图像的空间特征。下面给出卷积层的基本定义。
 \begin{equation}
   \label{eq:eq_conv-layer}
   [\mathbf{H}]{i, j} = u + \sum_{a = -\Delta}^{\Delta} \sum_{b = -\Delta}^{\Delta} [\mathbf{V }]{a, b} [\mathbf{X}]_{i+a, j+b}
@@ -33,7 +33,7 @@
 如果我们设置了$p_h=k_h-1$和$p_w=k_w-1$，则输出形状将简化为$\lfloor(n_h+s_h-1)/s_h\rfloor \times \lfloor(n_w+s_w-1)/s_w\rfloor$。 更进一步，如果输入的高度和宽度可以被垂直和水平步幅整除，则输出形状将为$(n_h/s_h) \times (n_w/s_w)$。
 
 \subsection{激活函数}
-卷积神经网络中常用的激活函数包括ReLU（线性整流单元）\cite{2018DeepLearningusingRectifiedLinearUnitsReLU}、Sigmoid\cite{2023SigmoidLossLanguageImagePreTraining}、Tanh（双曲正切）\cite{2021ActivationFunctionsDeepLearningComprehensiveSurveyBenchmark}等。这些激活函数的目的是在网络中引入非线性特性，使得网络能够学习到更加复杂的数据表示。本文用到的是 线性整流函数ReLU (Rectified Linear Unit)函数和Sigmoid函数。
+卷积神经网络中常用的激活函数包括ReLU（线性整流单元）\cite{2018DeepLearningusingRectifiedLinearUnitsReLU}、Sigmoid\cite{han1995influence}、Tanh（双曲正切）\cite{apicella2021survey}等。这些激活函数的目的是在网络中引入非线性特性，使得网络能够学习到更加复杂的数据表示。本文用到的是 线性整流函数ReLU (Rectified Linear Unit)函数和Sigmoid函数。
 对于给定元素$x$，ReLU函数被定义为该元素与$0$的最大值。它是目前最常用的激活函数之一。因为它的导数在大于0时为1，小于0时为0，这使得它可以用来缓解梯度消失的问题。
 \begin{equation}
   f(x) = \max(0, x)
@@ -45,7 +45,7 @@ Sigmoid函数将输入值映射到(0, 1)区间，这常常用于分类预测或�
 \end{equation}
 
 \subsection{池化层}
-池化（pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}是卷积神经网络中常见的一种方法，主要用于减少特征图的维度，减少计算量的同时保留重要的一致性信息。与卷积层类似，池化运算也是通过一个固定形状的窗口滑动来实现的。与之不同的是，池化通过对邻近像素进行统计学操作（如取最大值或平均值）来实现，因此也不包含参数。主要有两种类型的池化：最大池化（Max Pooling）\cite{2011Maxpoolingconvolutionalneuralnetworksvisionbasedhandgesturerecognition}和平均池化（Average Pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}
+池化（pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}是卷积神经网络中常见的一种方法，主要用于减少特征图的维度，减少计算量的同时保留重要的一致性信息。与卷积层类似，池化运算也是通过一个固定形状的窗口滑动来实现的。与之不同的是，池化通过对邻近像素进行统计学操作（如取最大值或平均值）来实现，因此也不包含参数。主要有两种类型的池化：平均池化（Average Pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}和最大池化（Max Pooling）\cite{2011Maxpoolingconvolutionalneuralnetworksvisionbasedhandgesturerecognition}
 池化操作通常有两个参数：池化核的大小（\(K \times K\)）和步幅（S）。池化核指定了池化操作的邻域范围，步幅定义了池化操作的移动间隔。对于输入大小为$W \times H$的特征图，池化操作后的输出大小$W' \times H'$可以通过以下公式计算：
 \begin{equation}
   W' = \left\lfloor\frac{W - K}{S} + 1\right\rfloor
@@ -66,9 +66,9 @@ $L_2$ 正则化在损失函数中添加模型权重的平方之和作为惩罚�
 L2正则化的目的是鼓励模型学习到更小更分散的权重值，从而提高模型的泛化能力。它对大的权重值施加较大的惩罚，从而防止模型依赖于少数几个可能具有高噪声的特征。
 
 \subsection{暂退法}
-Dropout（暂退法）\cite{2012Improvingneuralnetworkspreventingcoadaptationfeaturedetectors}在训练过程中以一定几率随机“丢弃”（即暂时移除）网络中的一部分神经元（包括其连接），这有助于模型学习到更加鲁棒的特征，减少神经元间复杂的共适应关系。需要注意的是，在测试时，我们通常不使用dropout。
+Dropout（暂退法）\cite{wu2021r}在训练过程中以一定几率随机“丢弃”（即暂时移除）网络中的一部分神经元（包括其连接），这有助于模型学习到更加鲁棒的特征，减少神经元间复杂的共适应关系。需要注意的是，在测试时，我们通常不使用dropout。
 \subsection{批量归一化}
-批量归一化（Batch Normalization）\cite{2015BatchNormalizationAcceleratingDeepNetworkTrainingReducingInternalCovariateShift}是通过对每个小批量数据进行归一化处理，调整神经网络中间层的输出，使其均值接近0，标准差接近1。这可以通过减去它们的均值除以它们的标准差得到。这有助于稳定和加速深度网络的训练过程，同时也具有一定的正则化效果。
+批量归一化（Batch Normalization）\cite{bjorck2018understanding}是通过对每个小批量数据进行归一化处理，调整神经网络中间层的输出，使其均值接近0，标准差接近1。这可以通过减去它们的均值除以它们的标准差得到。这有助于稳定和加速深度网络的训练过程，同时也具有一定的正则化效果。
 批量归一化（Batch Normalization，简称BN）是一种在深度神经网络中广泛使用的技术，用于加速训练过程并提高模型的稳定性。其基本思想是在网络的每层之后添加一个归一化步骤，这个步骤会对每个小批量数据（mini-batch）进行归一化处理，以确保网络中间层的激活分布保持稳定。批量归一化的公式如下：
 
 \begin{equation}
@@ -76,11 +76,11 @@ Dropout（暂退法）\cite{2012Improvingneuralnetworkspreventingcoadaptationfea
 \end{equation}
 其中，$\epsilon$是一个很小的数，用来防止除以零。归一化后的\(\hat{x}_i\)具有零均值和单位方差。
 \section{目标计数}
-目前目标计数领域主要有三类方法。一类是检测方法\cite{2015FastRCNN}\cite{2016FasterRCNNRealTimeObjectDetectionRegionProposalNetworks}\cite{2018YOLOv3IncrementalImprovement}\cite{2018MaskRCNN}\cite{2019ObjectDetectionCountObjectsImageusingTensorFlowObjectDetectionAPI}，通过目标检测模型识别出具体的物体位置，之后根据结果来进一步计数。但这类方法对于输入图像的分辨率有着较高的要求，往往需要物体具有明确清晰的边缘特征。在低分辨率下往往表现效果较差。一种是基于回归的方法\cite{2009BayesianPoissonRegressionCrowdCounting}\cite{2013MultisourceMultiscaleCountingExtremelyDenseCrowdImages}\cite{2009CrowdCountingUsingMultipleLocalFeatures}，直接拟合出图像特征和目标数目之间的回归模型得到图像中对应物体的数目。但这种方法未能完整利用图像中的空间位置信息和时间序列信息。当输入图像的大小和分布有变化的情况下，往往不具有很强的泛化能力。另一类方法是基于密度图的目标计数方法\cite{2018CSRNetDilatedConvolutionalNeuralNetworksUnderstandingHighlyCongestedScenesa}\cite{2016SingleImageCrowdCountingMultiColumnConvolutionalNeuralNetwork}\cite{2018CrowdCountingusingDeepRecurrentSpatialAwareNetwork}\cite{2018VehicleDetectionCountingHighResolutionAerialImagesUsingConvolutionalRegressionNeuralNetwork}。此类方法通常先得出一个目标物体在区域内的一个分布，之后就可以通过密度分布来估计总体的数量。该方法在稠密计数的场景下往往具有较好的效果。在本文使用的跨分辨率车辆计数数据集上，可以把车辆计数视为一个稠密计数场景。使用基于密度图的计数方法相较其余两类方法有着更好的表现。受上述方法启发，本文将跨分辨率车辆计数问题转换为两个子问题，即综合跨分辨率图像信息的图像分割网络和映射分割结果和最终计数目标的回归模型。
+目前目标计数领域主要有三类方法。一类是检测方法\cite{girshick2014rich,girshick2015fast,ren2015faster,redmon2016you,redmon2017yolo9000,he2017mask}，通过目标检测模型识别出具体的物体位置，之后根据结果来进一步计数。但这类方法对于输入图像的分辨率有着较高的要求，往往需要物体具有明确清晰的边缘特征。在低分辨率下往往表现效果较差。一种是基于回归的方法\cite{2009BayesianPoissonRegressionCrowdCounting,2013MultisourceMultiscaleCountingExtremelyDenseCrowdImages,2009CrowdCountingUsingMultipleLocalFeatures}，直接拟合出图像特征和目标数目之间的回归模型得到图像中对应物体的数目。但这种方法未能完整利用图像中的空间位置信息和时间序列信息。当输入图像的大小和分布有变化的情况下，往往不具有很强的泛化能力。另一类方法是基于密度图的目标计数方法\cite{li2018csrnet,2016SingleImageCrowdCountingMultiColumnConvolutionalNeuralNetwork,2018CrowdCountingusingDeepRecurrentSpatialAwareNetwork,2018VehicleDetectionCountingHighResolutionAerialImagesUsingConvolutionalRegressionNeuralNetwork}。此类方法通常先得出一个目标物体在区域内的一个分布，之后就可以通过密度分布来估计总体的数量。该方法在稠密计数的场景下往往具有较好的效果。在本文使用的跨分辨率车辆计数数据集上，可以把车辆计数视为一个稠密计数场景。使用基于密度图的计数方法相较其余两类方法有着更好的表现。受上述方法启发，本文将跨分辨率车辆计数问题转换为两个子问题，即综合跨分辨率图像信息的图像分割网络和映射分割结果和最终计数目标的回归模型。
 
 \section{U-Net网络}
 U-Net
-\cite{ronnebergerUNetConvolutionalNetworks2015}是一个广泛被应用的语义分割模型，最初被应用于医学图像的分割问题上。U-Net是一个具有对称结构的网络，通过使用跳跃连接（Skip Connection）来结合低层次的位置信息和高层次的语义信息，从而在细节上进行更准确的预测。
+\cite{cheng2021transfer}是一个广泛被应用的语义分割模型，最初被应用于医学图像的分割问题上。U-Net是一个具有对称结构的网络，通过使用跳跃连接（Skip Connection）来结合低层次的位置信息和高层次的语义信息，从而在细节上进行更准确的预测。
 \begin{figure}[h]
   \centering
   \includegraphics[width=\textwidth]{Unet.png}
@@ -140,7 +140,7 @@ y_2-y \\ y-y_1 \end{bmatrix}.
 这里\(W'\)和\(H'\)分别是输出特征图的宽度和高度。
 
 \section{注意力机制}
-注意力机制（Attention Mechanism）\cite{2023AttentionAllYouNeed}是一种模仿认知注意力的机制。在认知科学中，由于信息处理的瓶颈，人类会选择性地关注信息中的某一一部分，同时忽略其他可见的信息。上述机制通常被称为注意力机制。随着该机制在Transformer\cite{2023AttentionAllYouNeed}、BERT\cite{2018BERTPretrainingDeepBidirectionalTransformersLanguageUnderstanding}、GPT\cite{2023GenerativePretrainedTransformerComprehensiveReviewEnablingTechnologiesPotentialApplicationsEmergingChallengesFutureDirections}等NLP领域的成功，该机制及应用又成为了研究的热点话题。目前在计算机视觉领域，ViT\cite{2020ImageWorth16x16WordsTransformersImageRecognitionScale}、Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}等网络也都基于注意力机制进行设计。
+注意力机制（Attention Mechanism）\cite{vaswani2017attention}是一种模仿认知注意力的机制。在认知科学中，由于信息处理的瓶颈，人类会选择性地关注信息中的某一一部分，同时忽略其他可见的信息。上述机制通常被称为注意力机制。随着该机制在Transformer\cite{vaswani2017attention}、BERT\cite{2018BERTPretrainingDeepBidirectionalTransformersLanguageUnderstanding}、GPT\cite{2023GenerativePretrainedTransformerComprehensiveReviewEnablingTechnologiesPotentialApplicationsEmergingChallengesFutureDirections}等NLP领域的成功，该机制及应用又成为了研究的热点话题。目前在计算机视觉领域，ViT\cite{2020ImageWorth16x16WordsTransformersImageRecognitionScale}、Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}等网络也都基于注意力机制进行设计。
 从注意力的形式来分类的话，可以分为软注意力(soft attention)和硬注意力(hard attention)。其中软注意力机制是可微可导的，本文中主要探讨的也是软注意力机制。
 
 \subsection{注意力机制基本原理}
@@ -173,7 +173,7 @@ y_2-y \\ y-y_1 \end{bmatrix}.
 \text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V 
 \end{equation}
 
-其中，\(d_k\)是键的维度，这个因子用于缩放点积，避免在维度很高时计算结果过大，导致Softmax函数处于饱和区，从而缓解梯度消失的问题\cite{2023AttentionAllYouNeed}。
+其中，\(d_k\)是键的维度，这个因子用于缩放点积，避免在维度很高时计算结果过大，导致Softmax函数处于饱和区，从而缓解梯度消失的问题\cite{vaswani2017attention}。
 \subsection{注意力机制在图像领域的应用}
 在图像处理领域中，使用注意力机制可以显著提升模型的性能，尤其是在图像分类、目标检测和图像分割等任务中。根据任务需要不同，常用的注意力机制有以下几种：
 \begin{enumerate}    
@@ -203,7 +203,7 @@ y_2-y \\ y-y_1 \end{bmatrix}.
 
 
 \section{Attention U-Net网络}
-Attention U-Net\cite{oktayAttentionUNetLearning2018}是一种结合了注意力机制的UNet网络，最初被应用于医学图像的分割问题上。它在U-Net的架构上增加了Attention Gate注意力门使得模型能更好的聚焦在目标区域。
+Attention U-Net\cite{oktay2018attention}是一种结合了注意力机制的UNet网络，最初被应用于医学图像的分割问题上。它在U-Net的架构上增加了Attention Gate注意力门使得模型能更好的聚焦在目标区域。
 \begin{figure}[h]
   \centering
   \includegraphics[width=\textwidth]{attention Unet.png}
