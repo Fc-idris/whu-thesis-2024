@@ -14,7 +14,15 @@
 \end{enumerate}
 
 \section{分割精度测试}
-以同一日期的高分辨率图像的分割图作为标注，本设计在各种网络模块的组合上测试了分割精度。采用像素精度（Pixel Accuracy，PA）来定量评估分割精度。它表示所有像素中正确分类的比例。
+以同一日期的高分辨率图像的分割图作为标注，在同一位置生成低分辨率图像的分割图如图~\ref{fig:segc}所示。
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{segmentationC.png}
+  \caption{高低分辨率图像及对应分割图}
+  \label{fig:segc}
+\end{figure}
+
+本设计在各种网络模块的组合上测试了分割精度。采用像素精度（Pixel Accuracy，PA）来定量评估分割精度。它表示所有像素中正确分类的比例。
 \begin{equation}
     P A=\frac{\sum_{i}^{k} p_{i i}}{\sum_{i}^{k} \sum_{j}^{k} p_{i j}}
 \end{equation}
@@ -120,6 +128,24 @@
 
   对于小汽车、小型货车、大型货车和起重机四个类别，回归模型预测的斜率分别为10.353、18.354、42.468和27.323，\(R^2\)分别为0.9867、0.9821、0.9854和0.9376。\(R^2\)大于零且接近一，具有很强的正相关性。
 
+使用回归模型，可以得到最终的估计计数结果。本文使用平均绝对误差（Mean absolute error，MAE）和均方根误差（root-mean-square error，RMSE）来衡量预测值和高分辨率图像中真实计数结果的差异。本文比较了使用焦点损失函数和未使用焦点损失函数的模型在不同类别上这两个指标上的表现。如表~\ref{tab:MSE}所示：可以观察到使用了焦点损失的模型在小型货车和大型货车类别上均有远超未使用焦点损失的模型的预测结果，而在轿车类别的结果上，与未使用焦点损失的模型相差不大。
+\begin{table}[h]
+    \centering
+    \caption{模型在不同类别上的均方误差和均方根误差}
+    \label{tab:MSE}
+    \begin{tabularx}{\textwidth}{CCCC}
+      \toprule
+      是否使用焦点损失 & 类别  & 平均绝对误差 & 均方根误差  \\
+      \midrule
+      无焦点损失   & 轿车   & \textbf{9.85} & \textbf{9.97} \\ 
+      焦点损失   & 轿车   & 9.87 & 9.98 \\ 
+      无焦点损失   & 小型货车   & 29.73 & 32.34 \\ 
+      焦点损失   & 小型货车   & \textbf{25.61} & \textbf{29.77} \\ 
+      无焦点损失   & 大型货车   & 39.67 & 42.12 \\ 
+      焦点损失   & 大型货车   & \textbf{32.71} & \textbf{38.62} \\ 
+      \bottomrule
+    \end{tabularx}
+\end{table}  
 \section{训练细节}
 在训练过程中涉及到多个超参数的选择，其中比较重要的是损失函数的权重。模型使用的损失函数如下：
 \begin{equation}

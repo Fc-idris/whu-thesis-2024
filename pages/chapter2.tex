@@ -33,7 +33,7 @@
 如果我们设置了$p_h=k_h-1$和$p_w=k_w-1$，则输出形状将简化为$\lfloor(n_h+s_h-1)/s_h\rfloor \times \lfloor(n_w+s_w-1)/s_w\rfloor$。 更进一步，如果输入的高度和宽度可以被垂直和水平步幅整除，则输出形状将为$(n_h/s_h) \times (n_w/s_w)$。
 
 \subsection{激活函数}
-卷积神经网络中常用的激活函数包括ReLU（线性整流单元）\cite{2018DeepLearningusingRectifiedLinearUnitsReLU}、Sigmoid\cite{han1995influence}、Tanh（双曲正切）\cite{apicella2021survey}等。这些激活函数的目的是在网络中引入非线性特性，使得网络能够学习到更加复杂的数据表示。本文用到的是 线性整流函数ReLU (Rectified Linear Unit)函数和Sigmoid函数。
+卷积神经网络中常用的激活函数包括ReLU（线性整流单元）\cite{chen2020dynamic}、Sigmoid\cite{han1995influence}、Tanh（双曲正切）\cite{apicella2021survey}等。这些激活函数的目的是在网络中引入非线性特性，使得网络能够学习到更加复杂的数据表示。本文用到的是 线性整流函数ReLU (Rectified Linear Unit)函数和Sigmoid函数。
 对于给定元素$x$，ReLU函数被定义为该元素与$0$的最大值。它是目前最常用的激活函数之一。因为它的导数在大于0时为1，小于0时为0，这使得它可以用来缓解梯度消失的问题。
 \begin{equation}
   f(x) = \max(0, x)
@@ -57,7 +57,7 @@ Sigmoid函数将输入值映射到(0, 1)区间，这常常用于分类预测或�
 在卷积网络的实践中，池化层通常有降低特征维度、引入不变性、增加鲁棒性和防止过拟合的作用。
 
 \subsection{权重衰减}
-在模型训练时，可能会遇到过拟合的问题，使得模型在已有数据上有着较好的性能，而在测试数据上表现不佳。我们可以使用多种正则化技术来缓解过拟合的问题。权重衰减（weight decay）\cite{2012L2RegularizationLearningKernels}是最广泛使用的正则化的技术之一， 它通常也被称为$L_2$正则化。
+在模型训练时，可能会遇到过拟合的问题，使得模型在已有数据上有着较好的性能，而在测试数据上表现不佳。我们可以使用多种正则化技术来缓解过拟合的问题。权重衰减（weight decay）是最广泛使用的正则化的技术之一， 它通常也被称为$L_2$正则化。
 $L_2$ 正则化在损失函数中添加模型权重的平方之和作为惩罚项。同时通过一个非负的超参数$\lambda$来控制正则化的强度。$L_2$正则化正则化修正后的损失函数如下式：
 \begin{equation}
   L(\mathbf{w}, b)=\frac{1}{n} \sum_{i=1}^{n} \frac{1}{2}\left(\mathbf{w}^{\top} \mathbf{x}^{(i)}+b-y^{(i)}\right)^{2}+\frac{\lambda}{2}\|\mathbf{w}\|^{2}
@@ -140,7 +140,7 @@ y_2-y \\ y-y_1 \end{bmatrix}.
 这里\(W'\)和\(H'\)分别是输出特征图的宽度和高度。
 
 \section{注意力机制}
-注意力机制（Attention Mechanism）\cite{vaswani2017attention}是一种模仿认知注意力的机制。在认知科学中，由于信息处理的瓶颈，人类会选择性地关注信息中的某一一部分，同时忽略其他可见的信息。上述机制通常被称为注意力机制。随着该机制在Transformer\cite{vaswani2017attention}、BERT\cite{2018BERTPretrainingDeepBidirectionalTransformersLanguageUnderstanding}、GPT\cite{2023GenerativePretrainedTransformerComprehensiveReviewEnablingTechnologiesPotentialApplicationsEmergingChallengesFutureDirections}等NLP领域的成功，该机制及应用又成为了研究的热点话题。目前在计算机视觉领域，ViT\cite{2020ImageWorth16x16WordsTransformersImageRecognitionScale}、Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}等网络也都基于注意力机制进行设计。
+注意力机制（Attention Mechanism）\cite{vaswani2017attention}是一种模仿认知注意力的机制。在认知科学中，由于信息处理的瓶颈，人类会选择性地关注信息中的某一一部分，同时忽略其他可见的信息。上述机制通常被称为注意力机制。随着该机制在Transformer\cite{vaswani2017attention}、BERT\cite{devlin-etal-2019-bert}、GPT\cite{2023GenerativePretrainedTransformerComprehensiveReviewEnablingTechnologiesPotentialApplicationsEmergingChallengesFutureDirections}等NLP领域的成功，该机制及应用又成为了研究的热点话题。目前在计算机视觉领域，ViT\cite{dosovitskiy2021an}、Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}等网络也都基于注意力机制进行设计。
 从注意力的形式来分类的话，可以分为软注意力(soft attention)和硬注意力(hard attention)。其中软注意力机制是可微可导的，本文中主要探讨的也是软注意力机制。
 
 \subsection{注意力机制基本原理}
