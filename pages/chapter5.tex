@@ -55,13 +55,13 @@
 \subsection{消融实验}
 为了验证并解释模块设计的合理性和因果性，针对3种注意力门设计了消融实验。
 \begin{enumerate}    
-    \item 仅使用CRVC-Net骨架进行训练。
-    \item 仅使用自注意力门的CRVC-Net进行训练。
-    \item 仅使用跨分辨率注意力门的CRVC-Net进行训练。
-    \item 仅使用时间序列注意力门的CRVC-Net进行训练。
-    \item 使用自注意力门和跨分辨率注意力门的CRVC-Net进行训练。
-    \item 使用自注意力门和时间序列注意力门的CRVC-Net进行训练。
-    \item 使用自注意力门、时间序列注意力门和跨分辨率注意力门的CRVC-Net进行训练。
+    \item 仅使用CRVC-Net骨架进行训练（CRVC-Net）。
+    \item 仅使用自注意力门的CRVC-Net进行训练（base+SAG）。
+    \item 仅使用跨分辨率注意力门的CRVC-Net进行训练（base+CAG）。
+    \item 仅使用时间序列注意力门的CRVC-Net进行训练（base+TAG）。
+    \item 使用自注意力门和跨分辨率注意力门的CRVC-Net进行训练（base+SAG+CAG）。
+    \item 使用自注意力门和时间序列注意力门的CRVC-Net进行训练（base+SAG+TAG）。
+    \item 使用自注意力门、时间序列注意力门和跨分辨率注意力门的CRVC-Net进行训练（base+SAG+CAG+TAG）。
 \end{enumerate}
 实验的结果如下表所示：
 \begin{table}[h]
@@ -96,42 +96,13 @@
 
 \section{车辆计数回归结果测试}
 通过车辆覆盖率，可以通过低分辨率图像的大小来计算出车辆区域面积。通过高分辨率图像提供的真值计数信息，可以进行回归分析。本文中对四个车辆类别分别进行了车辆区域面积和车辆数目的回归分析，得到的结果如下图所示。
-\begin{figure}[h]
-    \centering
-    % 第一行两张图
-    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\linewidth]{cars.png}
-      \caption{小汽车}
-      \label{fig:subfig-a}
-    \end{subfigure}\quad % 添加一些间隔
-    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\linewidth]{smalltrucks.png}
-      \caption{小型货车}
-      \label{fig:subfig-b}
-    \end{subfigure}
-  
-    % 第二行两张图
-    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\linewidth]{largetruck.png}
-      \caption{大型货车}
-      \label{fig:subfig-c}
-    \end{subfigure}\quad % 添加一些间隔
-    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\linewidth]{cranes.png}
-      \caption{起重机}
-      \label{fig:subfig-d}
-    \end{subfigure}
-  
-    \caption{四种汽车回归计数的结果}
-    \label{fig:multi-image}
-\end{figure}
 
   对于小汽车、小型货车、大型货车和起重机四个类别，回归模型预测的斜率分别为10.353、18.354、42.468和27.323，\(R^2\)分别为0.9867、0.9821、0.9854和0.9376。\(R^2\)大于零且接近一，具有很强的正相关性。
 
-使用回归模型，可以得到最终的估计计数结果。本文使用平均绝对误差（Mean absolute error，MAE）和均方根误差（root-mean-square error，RMSE）来衡量预测值和高分辨率图像中真实计数结果的差异。本文比较了使用焦点损失函数和未使用焦点损失函数的模型在不同类别上这两个指标上的表现。如表~\ref{tab:MSE}所示：可以观察到使用了焦点损失的模型在小型货车和大型货车类别上均有远超未使用焦点损失的模型的预测结果，而在轿车类别的结果上，与未使用焦点损失的模型相差不大。
+使用回归模型，可以得到最终的估计计数结果。本文使用平均绝对误差（Mean absolute error，MAE）和均方根误差（root-mean-square error，RMSE）来衡量预测值和高分辨率图像中真实计数结果的差异。本文比较了使用焦点损失函数和未使用焦点损失函数的模型在不同类别上这两个指标上的表现。如表~\ref{tab:MSE}所示：可以观察到使用了焦点损失的模型在小型货车和大型货车类别上均有远超未使用焦点损失的模型的预测结果，而在轿车类别的结果上，与未使用焦点损失的模型相差不大。最后，本文和几种目标计数方法的性能进行比较，结果如表~\ref{tab:MSE}所示：可以观察到本文模型在CRVC数据集上的计数结果明显优于几种传统的目标计数方法。
 \begin{table}[h]
     \centering
-    \caption{模型在不同类别上的均方误差和均方根误差}
+    \caption{模型在不同类别上的平均绝对误差和均方根误差}
     \label{tab:MSE}
     \begin{tabularx}{\textwidth}{CCCC}
       \toprule
@@ -146,6 +117,52 @@
       \bottomrule
     \end{tabularx}
 \end{table}  
+
+
+\begin{table}[h]
+  \centering
+  \caption{不同模型上的平均绝对误差和均方根误差}
+  \label{tab:MSEtest}
+  \begin{tabularx}{\textwidth}{CCCC}
+    \toprule
+    模型  & 平均绝对误差 & 均方根误差  \\
+    \midrule
+    YOLO      & 78.73 & 93.34 \\ 
+    贝叶斯泊松回归  & 46.73 & 32.31 \\
+    本文模型      & \textbf{9.87} & \textbf{9.98} \\ 
+    \bottomrule
+  \end{tabularx}
+\end{table}  
+\begin{figure}[h]
+  \centering
+  % 第一行两张图
+  \begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\linewidth]{cars.png}
+    \caption{小汽车}
+    \label{fig:subfig-a}
+  \end{subfigure}\quad % 添加一些间隔
+  \begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\linewidth]{smalltrucks.png}
+    \caption{小型货车}
+    \label{fig:subfig-b}
+  \end{subfigure}
+
+  % 第二行两张图
+  \begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\linewidth]{largetruck.png}
+    \caption{大型货车}
+    \label{fig:subfig-c}
+  \end{subfigure}\quad % 添加一些间隔
+  \begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\linewidth]{cranes.png}
+    \caption{起重机}
+    \label{fig:subfig-d}
+  \end{subfigure}
+
+  \caption{四种汽车回归计数的结果}
+  \label{fig:multi-image}
+\end{figure}
+
 \section{训练细节}
 在训练过程中涉及到多个超参数的选择，其中比较重要的是损失函数的权重。模型使用的损失函数如下：
 \begin{equation}

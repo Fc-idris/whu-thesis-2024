@@ -1,0 +1,141 @@
+\chapter{目标计数基础理论和技术框架}
+\section{深度学习基础理论}
+目前主要的目标识别以及计数方法基于深度学习模型设计的，本小节介绍本文模型涉及到的深度学习相关理论。
+\subsection{卷积层}
+对于CRVC数据集中的图像数据，常使用卷积层\cite{minaee2021image,2012ImageNetClassificationDeepConvolutionalNeuralNetworks}来进行特征提取。卷积层具有的平移不变性和局部性非常适合处理图像数据，可以掌握图像的空间特征。下面给出卷积层的基本定义。
+\begin{equation}
+  \label{eq:eq_conv-layer}
+  [\mathbf{H}]{i, j} = u + \sum_{a = -\Delta}^{\Delta} \sum_{b = -\Delta}^{\Delta} [\mathbf{V }]{a, b} [\mathbf{X}]_{i+a, j+b}
+\end{equation}
+通过使用系数$[\mathbf{V}]{a, b}$对位置$(i, j)$附近的像素$(i+a, j+b)$进行加权得到$[\mathbf{H}]{i, j}$。 其中$|a|> \Delta$或$|b| > \Delta$约束条件使得该式满足局部性，即只关注于在位置像素$(i+a, j+b)$的小领域范围内的参数，大大减少了参数量。$\mathbf{V}$被称为卷积核（convolution kernel）或者滤波器（filter），也是该卷积层的权重，通常该权重是可学习的参数。参数a，b也对应着卷积核的尺寸$k_h,k_w$。
+
+上式\eqref{eq:eq_conv-layer}是单通道情况下卷积层的数学表示，当输入图像的通道数为$c_i$时，那么我们需要构造一个形状为$c_i\times k_h\times k_w$的卷积核。由于输入和卷积核都有$c_i$个通道，我们可以对每个通道输入的二维张量和卷积核的二维张量进行互相关运算，再对通道求和得到一个二维张量。这就是一个输出通道的结果。如果我们需要输出通道数为$c_o$时，只需创建一个卷积核的形状是$c_o\times c_i\times k_h\times k_w$。通道数量可以视作对于不同特征的描述，随着神经网络层数的加深，通常的做法是减少空间分辨率的同时增加通道数量。
+
+\subsection{填充和步幅}
+在应用多层卷积时，我们常常丢失边缘像素。填充（padding）可以解决这个问题。在输入图像的边界填充一定数量的元素（通常填充元素是$0$）。  
+通常，如果我们添加$p_h$行填充（大约一半在顶部，一半在底部）和$p_w$列填充（左侧大约一半，右侧一半），则输出形状将为
+
+\begin{equation}
+  (n_h-k_h+p_h+1),(n_w-k_w+p_w+1)
+\end{equation}
+这意味着输出的高度和宽度将分别增加$p_h$和$p_w$。
+在许多情况下，我们可以设置$p_h=k_h-1$和$p_w=k_w-1$，这样使得输入和输出具有相同的高度和宽度。假设$k_h$是奇数，我们将在高度的两侧填充$p_h/2$行。 如果$k_h$是偶数，通常会在输入顶部填充$\lceil p_h/2\rceil$行，在底部填充$\lfloor p_h/2\rfloor$行。同理，我们填充宽度的两侧。
+
+感受野是指卷积网络中某一层输出特征图上的一个元素所对应的输入图像上的区域大小。它表征着特征图能“看到”的区域的大小。我们可以通过连续的卷积来增加感受野，但这会增加参数量。我们还可以通过调整步幅来增大感受野。
+步幅是卷积操作中卷积核移动的步长。在对图像进行卷积时，卷积核从图像的一个角落开始，按照指定的步幅在图像上滑动，每次移动指定的像素数，直到覆盖整个图像。当步幅大于1时，卷积核每次移动多个像素，输出的特征图的尺寸也会随之减小。具体公式如下：
+
+通常，当垂直步幅为$s_h$，水平步幅为$s_w$时，输出形状为
+\begin{equation}
+  \lfloor(n_h-k_h+p_h+s_h)/s_h\rfloor \times \lfloor(n_w-k_w+p_w+s_w)/s_w\rfloor
+\end{equation}
+如果我们设置了$p_h=k_h-1$和$p_w=k_w-1$，则输出形状将简化为$\lfloor(n_h+s_h-1)/s_h\rfloor \times \lfloor(n_w+s_w-1)/s_w\rfloor$。 更进一步，如果输入的高度和宽度可以被垂直和水平步幅整除，则输出形状将为$(n_h/s_h) \times (n_w/s_w)$。
+
+\subsection{激活函数}
+卷积神经网络中常用的激活函数包括ReLU（线性整流单元）\cite{chen2020dynamic}、Sigmoid\cite{han1995influence}、Tanh（双曲正切）\cite{apicella2021survey}等。这些激活函数的目的是在网络中引入非线性特性，使得网络能够学习到更加复杂的数据表示。本文用到的是 线性整流函数ReLU (Rectified Linear Unit)函数和Sigmoid函数。
+对于给定元素$x$，ReLU函数被定义为该元素与$0$的最大值。它是目前最常用的激活函数之一。因为它的导数在大于0时为1，小于0时为0，这使得它可以用来缓解梯度消失的问题。
+\begin{equation}
+  f(x) = \max(0, x)
+\end{equation}
+
+Sigmoid函数将输入值映射到(0, 1)区间，这常常用于分类预测或者给出概率预测。然而，由于其在输入值绝对值较大时梯度接近0，可能会导致梯度消失问题。
+\begin{equation}
+  f(x) = \frac{1}{1 + e^{-x}}
+\end{equation}
+
+\subsection{池化层}
+池化（pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}是卷积神经网络中常见的一种方法，主要用于减少特征图的维度，减少计算量的同时保留重要的一致性信息。与卷积层类似，池化运算也是通过一个固定形状的窗口滑动来实现的。与之不同的是，池化通过对邻近像素进行统计学操作（如取最大值或平均值）来实现，因此也不包含参数。主要有两种类型的池化：平均池化（Average Pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}和最大池化（Max Pooling）\cite{2011Maxpoolingconvolutionalneuralnetworksvisionbasedhandgesturerecognition}
+池化操作通常有两个参数：池化核的大小（\(K \times K\)）和步幅（S）。池化核指定了池化操作的邻域范围，步幅定义了池化操作的移动间隔。对于输入大小为$W \times H$的特征图，池化操作后的输出大小$W' \times H'$可以通过以下公式计算：
+\begin{equation}
+  W' = \left\lfloor\frac{W - K}{S} + 1\right\rfloor
+\end{equation}
+\begin{equation}
+  H' = \left\lfloor\frac{H - K}{S} + 1\right\rfloor
+\end{equation}
+
+在卷积网络的实践中，池化层通常有降低特征维度、引入不变性、增加鲁棒性和防止过拟合的作用。
+
+\subsection{权重衰减}
+在模型训练时，可能会遇到过拟合的问题，使得模型在已有数据上有着较好的性能，而在测试数据上表现不佳。我们可以使用多种正则化技术来缓解过拟合的问题。权重衰减（weight decay）是最广泛使用的正则化的技术之一， 它通常也被称为$L_2$正则化。
+$L_2$ 正则化在损失函数中添加模型权重的平方之和作为惩罚项。同时通过一个非负的超参数$\lambda$来控制正则化的强度。$L_2$正则化正则化修正后的损失函数如下式：
+\begin{equation}
+  L(\mathbf{w}, b)=\frac{1}{n} \sum_{i=1}^{n} \frac{1}{2}\left(\mathbf{w}^{\top} \mathbf{x}^{(i)}+b-y^{(i)}\right)^{2}+\frac{\lambda}{2}\|\mathbf{w}\|^{2}
+\end{equation}
+
+L2正则化的目的是鼓励模型学习到更小更分散的权重值，从而提高模型的泛化能力。它对大的权重值施加较大的惩罚，从而防止模型依赖于少数几个可能具有高噪声的特征。
+
+\subsection{暂退法}
+Dropout（暂退法）\cite{wu2021r}在训练过程中以一定几率随机“丢弃”（即暂时移除）网络中的一部分神经元（包括其连接），这有助于模型学习到更加鲁棒的特征，减少神经元间复杂的共适应关系。需要注意的是，在测试时，我们通常不使用dropout。
+\subsection{批量归一化}
+批量归一化（Batch Normalization）\cite{bjorck2018understanding}是通过对每个小批量数据进行归一化处理，调整神经网络中间层的输出，使其均值接近0，标准差接近1。这可以通过减去它们的均值除以它们的标准差得到。这有助于稳定和加速深度网络的训练过程，同时也具有一定的正则化效果。
+批量归一化（Batch Normalization，简称BN）是一种在深度神经网络中广泛使用的技术，用于加速训练过程并提高模型的稳定性。其基本思想是在网络的每层之后添加一个归一化步骤，这个步骤会对每个小批量数据（mini-batch）进行归一化处理，以确保网络中间层的激活分布保持稳定。批量归一化的公式如下：
+
+\begin{equation}
+  \hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} 
+\end{equation}
+其中，$\epsilon$是一个很小的数，用来防止除以零。归一化后的\(\hat{x}_i\)具有零均值和单位方差。
+
+
+\section{目标计数方法概览}
+目前目标计数领域主要有三类方法。一类是检测方法\cite{girshick2014rich,girshick2015fast,ren2015faster,redmon2016you,redmon2017yolo9000,he2017mask}，通过目标检测模型识别出具体的物体位置，之后根据结果来进一步计数。但这类方法对于输入图像的分辨率有着较高的要求，往往需要物体具有明确清晰的边缘特征。在低分辨率下往往表现效果较差。一种是基于回归的方法\cite{2009BayesianPoissonRegressionCrowdCounting,2013MultisourceMultiscaleCountingExtremelyDenseCrowdImages,2009CrowdCountingUsingMultipleLocalFeatures}，直接拟合出图像特征和目标数目之间的回归模型得到图像中对应物体的数目。但这种方法未能完整利用图像中的空间位置信息和时间序列信息。当输入图像的大小和分布有变化的情况下，往往不具有很强的泛化能力。另一类方法是基于密度图的目标计数方法\cite{li2018csrnet,2016SingleImageCrowdCountingMultiColumnConvolutionalNeuralNetwork,2018CrowdCountingusingDeepRecurrentSpatialAwareNetwork,2018VehicleDetectionCountingHighResolutionAerialImagesUsingConvolutionalRegressionNeuralNetwork}。此类方法通常先得出一个目标物体在区域内的一个分布，之后就可以通过密度分布来估计总体的数量。该方法在稠密计数的场景下往往具有较好的效果。在本文使用的跨分辨率车辆计数数据集上，可以把车辆计数视为一个稠密计数场景。使用基于密度图的计数方法相较其余两类方法有着更好的表现。
+
+
+\section{U-Net网络}
+U-Net
+\cite{cheng2021transfer}是一个广泛被应用的语义分割模型，最初被应用于医学图像的分割问题上。U-Net是一个具有对称结构的网络，通过使用跳跃连接（Skip Connection）来结合低层次的位置信息和高层次的语义信息，从而在细节上进行更准确的预测。本文中的模型采用U-Net网络结构进行进一步设计。
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{Unet.png}
+  \caption{U-Net网络结构}
+  \label{fig:UNet}
+\end{figure}
+\subsection{模型结构}
+U-Net网络由一个收缩路径（contracting path）和一个扩展路径（expansive path）组成.网络的输入是一张$572\times 572$的的图片（input image tile）。网络最终的输出为同样尺寸的分割图预测。图像经过收缩路径提取综合特征，并保留中间特征信息。在扩展路径中，综合上采样后前一层特征结果与对应尺度的编码特征 ，得到最终的结果。因为整个网络结构形似字母‘U’，因此称为U-Net。
+\subsection{收缩路径}
+收缩路径是由多个卷积层、线性整流函数单元（ReLU）和最大汇聚层（Max Pooling）构成的一系列降采样操作。论文中将这一部分叫做压缩路径（contracting path）。压缩路径由4个块组成，每个块使用了3个有效卷积和1个Max Pooling进行下采样。每个块处理之后特征图的通道数扩大为2倍，特征图的长和宽也有相应缩小。这样的处理使得不同的特征被逐步提取到不同的通道中。最终得到了尺寸为$32\times 32$的特征图。
+\subsection{扩展路径}
+扩展路径是相同数量的相似模块组成。不同的是扩展路径中使用了反向卷积和上采样。同时扩展路径通过跳跃连接从收缩路径对应的层中获取特征图，并与当前层的特征图进行融合。这种结构有助于恢复图像的精细信息，使得在深度网络中消失的某些信息不至被遗忘。
+在深度学习和计算机视觉中，上采样（Upsampling）和反向卷积（也称为转置卷积，Transposed Convolution）是两种常用的技术，用于增加图像或特征图的分辨率。这两种技术常见于像U-Net这样的网络结构中，用于从深层特征映射中恢复图像的细节信息，尤其在图像分割和生成模型中十分重要。
+
+\subsection{双线性插值}
+上采样是一种用于增加图像或特征图的尺寸的方法。它通过已有数据的插值来增加分辨率，主要有最近邻插值、双线性插值和双三次插值等方法。下面主要介绍双线性插值\cite{2022Upsamplingcomparativestudynewideas}。
+在双线性插值中，输出像素的值是输入像素值的加权平均，权重基于像素之间的距离。假如我们想得到未知函数 f 在点 $P=\left( x, y\right)$ 的值，假设我们已知函数 f 在 $Q_{11} = \left( x_1, y_1 \right) $, $Q_{12} = \left( x_1, y_2 \right) $, $Q_{21} = \left( x_2, y_1 \right) $, 及 $Q_{22} = \left( x_2, y_2 \right) $ 四个点的值。 
+
+首先在 x 方向进行线性插值，得到:
+\begin{align}
+f(x, y_1) &\approx \frac{x_2-x}{x_2-x_1} f(Q_{11}) + \frac{x-x_1}{x_2-x_1} f(Q_{21}), \\
+f(x, y_2) &\approx \frac{x_2-x}{x_2-x_1} f(Q_{12}) + \frac{x-x_1}{x_2-x_1} f(Q_{22}).
+\end{align}
+
+然后在 y 方向进行线性插值，得到 
+\begin{equation}
+  \begin{aligned}
+    f(x,y) &\approx \frac{y_2-y}{y_2-y_1} f(x, y_1) + \frac{y-y_1}{y_2-y_1} f(x, y_2) \\
+&= \frac{y_2-y}{y_2-y_1} \left ( \frac{x_2-x}{x_2-x_1} f(Q_{11}) + \frac{x-x_1}{x_2-x_1} f(Q_{21}) \right ) \\
+&+ \frac{y-y_1}{y_2-y_1} \left ( \frac{x_2-x}{x_2-x_1} f(Q_{12}) + \frac{x-x_1}{x_2-x_1} f(Q_{22}) \right ) \\
+&= \frac{1}{(x_2-x_1)(y_2-y_1)} \big( f(Q_{11})(x_2-x)(y_2-y)+ f(Q_{21})(x-x_1)(y_2-y)\\
+&+  f(Q_{12})(x_2-x)(y-y_1) + f(Q_{22})(x-x_1)(y-y_1) \big)\\
+&=\frac{1}{(x_2-x_1)(y_2-y_1)}  \begin{bmatrix} x_2-x & x-x_1 \end{bmatrix} \begin{bmatrix} f(Q_{11}) & f(Q_{12}) \\ f(Q_{21})& f(Q_{22}) \end{bmatrix} \begin{bmatrix}
+y_2-y \\ y-y_1 \end{bmatrix}.
+  \end{aligned}
+\end{equation}
+
+如果先在 y 方向插值、再在 x 方向插值，其结果与按照上述顺序双线性插值的结果是一样的。由上式我们不难看出，双线性插值由两个线性函数的积构成，因此为网络带来了非线性。
+
+\subsection{转置卷积}
+
+转置卷积\cite{2018guideconvolutionarithmeticdeeplearning}是一种更复杂的上采样技术，它通过神经网络来试图学习一种更有效的插值方式。它不仅增加了特征图的尺寸，还可以学习在上采样过程中引入新的信息。它通过反转卷积操作的流程实现，因此被称为转置卷积。
+标准卷积操作是将卷积核应用于多个输入上，得到一个输出，实际上就是建立了一个多对一的关系。对于转置卷积而言，我们实际上是想建立一个逆向操作，也就是建立一个一对多的关系。对于标准卷积，我们有：
+\begin{equation}
+𝑌=𝐶𝑋
+\end{equation}
+
+转置卷积其实就是要对其进行逆操作，求出X
+\begin{equation}
+  X=C^T Y
+\end{equation}
+假设输入特征图大小为\(W \times H\)，卷积核大小为\(K \times K\)，步长为\(S\)，填充为\(P\)，输出特征图大小可以通过以下公式计算：
+
+\[ W' = S(W-1) + K - 2P \]
+\[ H' = S(H-1) + K - 2P \]
+
+这里\(W'\)和\(H'\)分别是输出特征图的宽度和高度。

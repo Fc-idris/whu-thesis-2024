@@ -1,145 +1,62 @@
 % Chapter 2
 
-\chapter{目标计数基础理论和技术框架}
-\section{深度学习基础理论}
-目前主要的目标识别以及计数方法基于深度学习模型设计的，本小节介绍本文模型涉及到的深度学习相关理论。
-\subsection{卷积层}
-对于CRVC数据集中的图像数据，常使用卷积层\cite{minaee2021image,2012ImageNetClassificationDeepConvolutionalNeuralNetworks}来进行特征提取。卷积层具有的平移不变性和局部性非常适合处理图像数据，可以掌握图像的空间特征。下面给出卷积层的基本定义。
+\chapter{相关工作分析}
+
+本节中，对三种目标检测类别的代表性方法进行分析，并分析了其在CRVC数据集上的局限性及改进方向。此外，本节还将介绍几种利用不同维度、不同来源的数据的方法，详细分析其技术特点，参照其思想，改进CRVC数据集上模型的表现。
+
+\section{目标计数方法分析}
+目前目标计数领域主要有三类方法。一类是检测方法\cite{girshick2014rich,girshick2015fast,ren2015faster,redmon2016you,redmon2017yolo9000,he2017mask}，通过目标检测模型识别出具体的物体位置，之后根据结果来进一步计数。一种是基于回归的方法\cite{2009BayesianPoissonRegressionCrowdCounting,2013MultisourceMultiscaleCountingExtremelyDenseCrowdImages,2009CrowdCountingUsingMultipleLocalFeatures}，直接拟合出图像特征和目标数目之间的回归模型得到图像中对应物体的数目。
+另一类方法是基于密度图的目标计数方法\cite{li2018csrnet,2016SingleImageCrowdCountingMultiColumnConvolutionalNeuralNetwork,2018CrowdCountingusingDeepRecurrentSpatialAwareNetwork,2018VehicleDetectionCountingHighResolutionAerialImagesUsingConvolutionalRegressionNeuralNetwork}。此类方法通常先得出一个目标物体在区域内的一个分布，之后就可以通过密度分布来估计总体的数量。
+\subsection{YOLO网络}
+YOLO（You Only Look Once）
+\cite{redmon2016you}是一种广泛应用于实时对象检测任务的深度学习模型。YOLO通过单一的神经网络来预测物体边界和分类概率，从而实现快速且准确的目标检测。
+
+\subsubsection{模型结构}
+YOLO模型将对象检测的任务视为一个单一的回归问题，从图像像素直接到边界框的坐标和类别概率。模型的输入是一张图像，输出是一个预测边界框和类别概率的张量。每个预测包含了边界框的四个坐标、一个对象置信度分数以及各类别的概率。YOLO的网络由多个卷积层和汇聚层组成，最后通过一个全连接层输出预测结果。该网络结构能够在整个图像上进行多尺度的特征提取，同时保留足够的空间分辨率以预测小尺寸物体的位置。
+
+在预测时，YOLO将图像划分为一个个格子，每个格子负责预测中心点落在此区域的物体。这样可以使得模型可以同时预测多个位置的多个物体，提升推理效率。每个格子预测多个边界框和相应的置信度分数，置信度分数反映了边界框内存在物体的概率及该边界框的准确性。
+
+在目标计数任务上，YOLO模型通过快速准确的识别出目标锚框并对其计数来得到最终的估计结果。
+
+\subsubsection{局限性}
+在通常的计数场景下，计数目标具有清晰的轮廓和准确的真值标注。但是对于CRVC数据集来说，只具有少量具有准确标注的高分辨率图像，大量低分辨率图像中难以分辨出目标具体的位置，也缺少对应的真值标注。由于YOLO依赖于其卷积层来捕捉图像中的特征，但低分辨率图像中的特征捕捉更为困难，因此会导致性能下降。同时CRVC数据集中低分辨率图像的标注不足，可能导致模型训练不充分，从而影响其在实际应用中的准确性和鲁棒性。此外，YOLO虽然能够处理不同尺寸的目标，但对于检测密集分布的低分辨率目标，YOLO的性能往往不是很理想。
+
+因此为了更好的估计低分辨率图像中的目标数目，需要结合场景的先验知识设计专门的网络架构或损失函数，从而提高模型对模糊密集目标的计数能力。
+
+\subsection{贝叶斯泊松回归在人群计数中的应用}
+贝叶斯泊松回归\cite{2009BayesianPoissonRegressionCrowdCounting} 是一种在人群计数领域中应用的统计模型。该模型利用泊松分布的特性，对离散计数数据进行建模，并通过引入贝叶斯框架来增强模型的预测性能和鲁棒性。
+
+\subsubsection{模型结构}
+贝叶斯泊松回归通过将泊松回归模型扩展到贝叶斯统计框架中，以处理离散数据问题。模型输入为一组特征向量，输出为对应的人数计数，这些计数值被建模为泊松分布的参数。通过引入对于模型参数的先验分布及后验分布估计，对于每一个输入的特征向量，模型预测一个人群计数，并且提供该预测的不确定性度量。
+
+模型采用泊松分布对计数进行建模，其中计数均值是输入特征的线性函数的指数。模型的贝叶斯推理涉及到对参数的后验分布进行估计，通常使用马尔科夫链蒙特卡洛（MCMC）方法或变分推断方法来进行近似计算。
+
+在人群计数的实验中，贝叶斯泊松回归展示了其对复杂场景下人群密度估计的有效性。模型能够准确估计不同场景和时间下的人群数量，对于动态变化的人群场景尤为适用。
+
+\subsubsection{局限性}
+该模型在密集物体的计数问题上有着不错的效果，但对于训练数据的要求限制了其在CRVC数据集上的表现。为了降低对高分辨率标注数据的依赖，可以通过半监督或者弱监督学习的方法改进，尤其是利用其余时刻的低分辨率图像进行辅助监督。
+
+
+\subsection{CRVC网络}
+CRVC网络是针对CRVC数据集设计的深度学习模型。该模型将跨分辨率车辆计数问题转换为两个子问题，即综合跨分辨率图像信息的图像分割网络和映射分割结果和最终计数目标的回归模型。它以U-Net模型为骨架，针对跨分辨率空间CRVC数据集中的数据特性设计了两个分支来提取跨分辨率空间信息和时序信息。通过上述网络估计出密度分布后，使用线性回归模型得出最终目标计数结果。
+
+\subsubsection{网络设计}
+
+模型接受4个输入，分别是高分辨率图像输入$I^{HR}$，对应低分辨率图像输入$I^{LR}$,与LR图像时间间隔较近的$I^{LR}_{near}$和与LR图像时间间隔较远的$I^{LR}_{far}$。模型包含两个独立学习的编码器HR encoder和LR encoder，前者用来提取高分辨率图像的特征，后者用来提取3个低分辨率图像的特征。提取出的低分辨率特征和高分辨率特征作差来综合更高精度的信息。之后通过带有跳跃连接的decoder完成分割图的生成。
+
+
+在CRVC数据集中，车辆在目标区域是密集停放的，而且不存在重叠。因此从分割图上估计出的覆盖率和最终的车辆数目具有线性关系。通过CRVC网络得到的覆盖率分割图，根据低分辨率图像的缩放比例，可以估计出实际面积。通过线性回归，找出参数k来拟合
 \begin{equation}
-  \label{eq:eq_conv-layer}
-  [\mathbf{H}]{i, j} = u + \sum_{a = -\Delta}^{\Delta} \sum_{b = -\Delta}^{\Delta} [\mathbf{V }]{a, b} [\mathbf{X}]_{i+a, j+b}
+    Number_i=k_i\dots Area_i+b_i
 \end{equation}
-通过使用系数$[\mathbf{V}]{a, b}$对位置$(i, j)$附近的像素$(i+a, j+b)$进行加权得到$[\mathbf{H}]{i, j}$。 其中$|a|> \Delta$或$|b| > \Delta$约束条件使得该式满足局部性，即只关注于在位置像素$(i+a, j+b)$的小领域范围内的参数，大大减少了参数量。$\mathbf{V}$被称为卷积核（convolution kernel）或者滤波器（filter），也是该卷积层的权重，通常该权重是可学习的参数。参数a，b也对应着卷积核的尺寸$k_h,k_w$。
+其中i表示第i类车辆。这些参数通过高分辨率图像的真值计算得到。
 
-上式\eqref{eq:eq_conv-layer}是单通道情况下卷积层的数学表示，当输入图像的通道数为$c_i$时，那么我们需要构造一个形状为$c_i\times k_h\times k_w$的卷积核。由于输入和卷积核都有$c_i$个通道，我们可以对每个通道输入的二维张量和卷积核的二维张量进行互相关运算，再对通道求和得到一个二维张量。这就是一个输出通道的结果。如果我们需要输出通道数为$c_o$时，只需创建一个卷积核的形状是$c_o\times c_i\times k_h\times k_w$。通道数量可以视作对于不同特征的描述，随着神经网络层数的加深，通常的做法是减少空间分辨率的同时增加通道数量。
+\subsubsection{模型局限}
+CRVC网络针对CRVC数据集的特点进行了设计，在各项评价指标上均优于传统目标计数方法。然而模型对于样本数量较少的类别的计数效果不是很理想。CRVC网络通过引入两个额外分支来分别提取高分辨率的空间信息和低分辨率的时序信息，然而，对于数据集中的时间连续性和空间一致性信息的挖掘，网络的表现仍有进一步优化的空间。本文针对上述问题进行了针对性设计。
 
-\subsection{填充和步幅}
-在应用多层卷积时，我们常常丢失边缘像素。填充（padding）可以解决这个问题。在输入图像的边界填充一定数量的元素（通常填充元素是$0$）。  
-通常，如果我们添加$p_h$行填充（大约一半在顶部，一半在底部）和$p_w$列填充（左侧大约一半，右侧一半），则输出形状将为
 
-\begin{equation}
-  (n_h-k_h+p_h+1),(n_w-k_w+p_w+1)
-\end{equation}
-这意味着输出的高度和宽度将分别增加$p_h$和$p_w$。
-在许多情况下，我们可以设置$p_h=k_h-1$和$p_w=k_w-1$，这样使得输入和输出具有相同的高度和宽度。假设$k_h$是奇数，我们将在高度的两侧填充$p_h/2$行。 如果$k_h$是偶数，通常会在输入顶部填充$\lceil p_h/2\rceil$行，在底部填充$\lfloor p_h/2\rfloor$行。同理，我们填充宽度的两侧。
 
-感受野是指卷积网络中某一层输出特征图上的一个元素所对应的输入图像上的区域大小。它表征着特征图能“看到”的区域的大小。我们可以通过连续的卷积来增加感受野，但这会增加参数量。我们还可以通过调整步幅来增大感受野。
-步幅是卷积操作中卷积核移动的步长。在对图像进行卷积时，卷积核从图像的一个角落开始，按照指定的步幅在图像上滑动，每次移动指定的像素数，直到覆盖整个图像。当步幅大于1时，卷积核每次移动多个像素，输出的特征图的尺寸也会随之减小。具体公式如下：
-
-通常，当垂直步幅为$s_h$，水平步幅为$s_w$时，输出形状为
-\begin{equation}
-  \lfloor(n_h-k_h+p_h+s_h)/s_h\rfloor \times \lfloor(n_w-k_w+p_w+s_w)/s_w\rfloor
-\end{equation}
-如果我们设置了$p_h=k_h-1$和$p_w=k_w-1$，则输出形状将简化为$\lfloor(n_h+s_h-1)/s_h\rfloor \times \lfloor(n_w+s_w-1)/s_w\rfloor$。 更进一步，如果输入的高度和宽度可以被垂直和水平步幅整除，则输出形状将为$(n_h/s_h) \times (n_w/s_w)$。
-
-\subsection{激活函数}
-卷积神经网络中常用的激活函数包括ReLU（线性整流单元）\cite{chen2020dynamic}、Sigmoid\cite{han1995influence}、Tanh（双曲正切）\cite{apicella2021survey}等。这些激活函数的目的是在网络中引入非线性特性，使得网络能够学习到更加复杂的数据表示。本文用到的是 线性整流函数ReLU (Rectified Linear Unit)函数和Sigmoid函数。
-对于给定元素$x$，ReLU函数被定义为该元素与$0$的最大值。它是目前最常用的激活函数之一。因为它的导数在大于0时为1，小于0时为0，这使得它可以用来缓解梯度消失的问题。
-\begin{equation}
-  f(x) = \max(0, x)
-\end{equation}
-
-Sigmoid函数将输入值映射到(0, 1)区间，这常常用于分类预测或者给出概率预测。然而，由于其在输入值绝对值较大时梯度接近0，可能会导致梯度消失问题。
-\begin{equation}
-  f(x) = \frac{1}{1 + e^{-x}}
-\end{equation}
-
-\subsection{池化层}
-池化（pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}是卷积神经网络中常见的一种方法，主要用于减少特征图的维度，减少计算量的同时保留重要的一致性信息。与卷积层类似，池化运算也是通过一个固定形状的窗口滑动来实现的。与之不同的是，池化通过对邻近像素进行统计学操作（如取最大值或平均值）来实现，因此也不包含参数。主要有两种类型的池化：平均池化（Average Pooling）\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}和最大池化（Max Pooling）\cite{2011Maxpoolingconvolutionalneuralnetworksvisionbasedhandgesturerecognition}
-池化操作通常有两个参数：池化核的大小（\(K \times K\)）和步幅（S）。池化核指定了池化操作的邻域范围，步幅定义了池化操作的移动间隔。对于输入大小为$W \times H$的特征图，池化操作后的输出大小$W' \times H'$可以通过以下公式计算：
-\begin{equation}
-  W' = \left\lfloor\frac{W - K}{S} + 1\right\rfloor
-\end{equation}
-\begin{equation}
-  H' = \left\lfloor\frac{H - K}{S} + 1\right\rfloor
-\end{equation}
-
-在卷积网络的实践中，池化层通常有降低特征维度、引入不变性、增加鲁棒性和防止过拟合的作用。
-
-\subsection{权重衰减}
-在模型训练时，可能会遇到过拟合的问题，使得模型在已有数据上有着较好的性能，而在测试数据上表现不佳。我们可以使用多种正则化技术来缓解过拟合的问题。权重衰减（weight decay）是最广泛使用的正则化的技术之一， 它通常也被称为$L_2$正则化。
-$L_2$ 正则化在损失函数中添加模型权重的平方之和作为惩罚项。同时通过一个非负的超参数$\lambda$来控制正则化的强度。$L_2$正则化正则化修正后的损失函数如下式：
-\begin{equation}
-  L(\mathbf{w}, b)=\frac{1}{n} \sum_{i=1}^{n} \frac{1}{2}\left(\mathbf{w}^{\top} \mathbf{x}^{(i)}+b-y^{(i)}\right)^{2}+\frac{\lambda}{2}\|\mathbf{w}\|^{2}
-\end{equation}
-
-L2正则化的目的是鼓励模型学习到更小更分散的权重值，从而提高模型的泛化能力。它对大的权重值施加较大的惩罚，从而防止模型依赖于少数几个可能具有高噪声的特征。
-
-\subsection{暂退法}
-Dropout（暂退法）\cite{wu2021r}在训练过程中以一定几率随机“丢弃”（即暂时移除）网络中的一部分神经元（包括其连接），这有助于模型学习到更加鲁棒的特征，减少神经元间复杂的共适应关系。需要注意的是，在测试时，我们通常不使用dropout。
-\subsection{批量归一化}
-批量归一化（Batch Normalization）\cite{bjorck2018understanding}是通过对每个小批量数据进行归一化处理，调整神经网络中间层的输出，使其均值接近0，标准差接近1。这可以通过减去它们的均值除以它们的标准差得到。这有助于稳定和加速深度网络的训练过程，同时也具有一定的正则化效果。
-批量归一化（Batch Normalization，简称BN）是一种在深度神经网络中广泛使用的技术，用于加速训练过程并提高模型的稳定性。其基本思想是在网络的每层之后添加一个归一化步骤，这个步骤会对每个小批量数据（mini-batch）进行归一化处理，以确保网络中间层的激活分布保持稳定。批量归一化的公式如下：
-
-\begin{equation}
-  \hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} 
-\end{equation}
-其中，$\epsilon$是一个很小的数，用来防止除以零。归一化后的\(\hat{x}_i\)具有零均值和单位方差。
-\section{目标计数}
-目前目标计数领域主要有三类方法。一类是检测方法\cite{girshick2014rich,girshick2015fast,ren2015faster,redmon2016you,redmon2017yolo9000,he2017mask}，通过目标检测模型识别出具体的物体位置，之后根据结果来进一步计数。但这类方法对于输入图像的分辨率有着较高的要求，往往需要物体具有明确清晰的边缘特征。在低分辨率下往往表现效果较差。一种是基于回归的方法\cite{2009BayesianPoissonRegressionCrowdCounting,2013MultisourceMultiscaleCountingExtremelyDenseCrowdImages,2009CrowdCountingUsingMultipleLocalFeatures}，直接拟合出图像特征和目标数目之间的回归模型得到图像中对应物体的数目。但这种方法未能完整利用图像中的空间位置信息和时间序列信息。当输入图像的大小和分布有变化的情况下，往往不具有很强的泛化能力。另一类方法是基于密度图的目标计数方法\cite{li2018csrnet,2016SingleImageCrowdCountingMultiColumnConvolutionalNeuralNetwork,2018CrowdCountingusingDeepRecurrentSpatialAwareNetwork,2018VehicleDetectionCountingHighResolutionAerialImagesUsingConvolutionalRegressionNeuralNetwork}。此类方法通常先得出一个目标物体在区域内的一个分布，之后就可以通过密度分布来估计总体的数量。该方法在稠密计数的场景下往往具有较好的效果。在本文使用的跨分辨率车辆计数数据集上，可以把车辆计数视为一个稠密计数场景。使用基于密度图的计数方法相较其余两类方法有着更好的表现。受上述方法启发，本文将跨分辨率车辆计数问题转换为两个子问题，即综合跨分辨率图像信息的图像分割网络和映射分割结果和最终计数目标的回归模型。
-
-\section{U-Net网络}
-U-Net
-\cite{cheng2021transfer}是一个广泛被应用的语义分割模型，最初被应用于医学图像的分割问题上。U-Net是一个具有对称结构的网络，通过使用跳跃连接（Skip Connection）来结合低层次的位置信息和高层次的语义信息，从而在细节上进行更准确的预测。
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=\textwidth]{Unet.png}
-  \caption{U-Net网络结构}
-  \label{fig:UNet}
-\end{figure}
-\subsection{模型结构}
-U-Net网络由一个收缩路径（contracting path）和一个扩展路径（expansive path）组成.网络的输入是一张$572\times 572$的的图片（input image tile）。网络最终的输出为同样尺寸的分割图预测。图像经过收缩路径提取综合特征，并保留中间特征信息。在扩展路径中，综合上采样后前一层特征结果与对应尺度的编码特征 ，得到最终的结果。因为整个网络结构形似字母‘U’，因此称为U-Net。
-\subsection{收缩路径}
-收缩路径是由多个卷积层、线性整流函数单元（ReLU）和最大汇聚层（Max Pooling）构成的一系列降采样操作。论文中将这一部分叫做压缩路径（contracting path）。压缩路径由4个块组成，每个块使用了3个有效卷积和1个Max Pooling进行下采样。每个块处理之后特征图的通道数扩大为2倍，特征图的长和宽也有相应缩小。这样的处理使得不同的特征被逐步提取到不同的通道中。最终得到了尺寸为$32\times 32$的特征图。
-\subsection{扩展路径}
-扩展路径是相同数量的相似模块组成。不同的是扩展路径中使用了反向卷积和上采样。同时扩展路径通过跳跃连接从收缩路径对应的层中获取特征图，并与当前层的特征图进行融合。这种结构有助于恢复图像的精细信息，使得在深度网络中消失的某些信息不至被遗忘。
-在深度学习和计算机视觉中，上采样（Upsampling）和反向卷积（也称为转置卷积，Transposed Convolution）是两种常用的技术，用于增加图像或特征图的分辨率。这两种技术常见于像U-Net这样的网络结构中，用于从深层特征映射中恢复图像的细节信息，尤其在图像分割和生成模型中十分重要。
-
-\subsection{双线性插值}
-上采样是一种用于增加图像或特征图的尺寸的方法。它通过已有数据的插值来增加分辨率，主要有最近邻插值、双线性插值和双三次插值等方法。下面主要介绍双线性插值\cite{2022Upsamplingcomparativestudynewideas}。
-在双线性插值中，输出像素的值是输入像素值的加权平均，权重基于像素之间的距离。假如我们想得到未知函数 f 在点 $P=\left( x, y\right)$ 的值，假设我们已知函数 f 在 $Q_{11} = \left( x_1, y_1 \right) $, $Q_{12} = \left( x_1, y_2 \right) $, $Q_{21} = \left( x_2, y_1 \right) $, 及 $Q_{22} = \left( x_2, y_2 \right) $ 四个点的值。 
-
-首先在 x 方向进行线性插值，得到:
-\begin{align}
-f(x, y_1) &\approx \frac{x_2-x}{x_2-x_1} f(Q_{11}) + \frac{x-x_1}{x_2-x_1} f(Q_{21}), \\
-f(x, y_2) &\approx \frac{x_2-x}{x_2-x_1} f(Q_{12}) + \frac{x-x_1}{x_2-x_1} f(Q_{22}).
-\end{align}
-
-然后在 y 方向进行线性插值，得到 
-\begin{equation}
-  \begin{aligned}
-    f(x,y) &\approx \frac{y_2-y}{y_2-y_1} f(x, y_1) + \frac{y-y_1}{y_2-y_1} f(x, y_2) \\
-&= \frac{y_2-y}{y_2-y_1} \left ( \frac{x_2-x}{x_2-x_1} f(Q_{11}) + \frac{x-x_1}{x_2-x_1} f(Q_{21}) \right ) \\
-&+ \frac{y-y_1}{y_2-y_1} \left ( \frac{x_2-x}{x_2-x_1} f(Q_{12}) + \frac{x-x_1}{x_2-x_1} f(Q_{22}) \right ) \\
-&= \frac{1}{(x_2-x_1)(y_2-y_1)} \big( f(Q_{11})(x_2-x)(y_2-y)+ f(Q_{21})(x-x_1)(y_2-y)\\
-&+  f(Q_{12})(x_2-x)(y-y_1) + f(Q_{22})(x-x_1)(y-y_1) \big)\\
-&=\frac{1}{(x_2-x_1)(y_2-y_1)}  \begin{bmatrix} x_2-x & x-x_1 \end{bmatrix} \begin{bmatrix} f(Q_{11}) & f(Q_{12}) \\ f(Q_{21})& f(Q_{22}) \end{bmatrix} \begin{bmatrix}
-y_2-y \\ y-y_1 \end{bmatrix}.
-  \end{aligned}
-\end{equation}
-
-如果先在 y 方向插值、再在 x 方向插值，其结果与按照上述顺序双线性插值的结果是一样的。由上式我们不难看出，双线性插值由两个线性函数的积构成，因此为网络带来了非线性。
-
-\subsection{转置卷积}
-
-转置卷积\cite{2018guideconvolutionarithmeticdeeplearning}是一种更复杂的上采样技术，它通过神经网络来试图学习一种更有效的插值方式。它不仅增加了特征图的尺寸，还可以学习在上采样过程中引入新的信息。它通过反转卷积操作的流程实现，因此被称为转置卷积。
-标准卷积操作是将卷积核应用于多个输入上，得到一个输出，实际上就是建立了一个多对一的关系。对于转置卷积而言，我们实际上是想建立一个逆向操作，也就是建立一个一对多的关系。对于标准卷积，我们有：
-\begin{equation}
-𝑌=𝐶𝑋
-\end{equation}
-
-转置卷积其实就是要对其进行逆操作，求出X
-\begin{equation}
-  X=C^T Y
-\end{equation}
-假设输入特征图大小为\(W \times H\)，卷积核大小为\(K \times K\)，步长为\(S\)，填充为\(P\)，输出特征图大小可以通过以下公式计算：
-
-\[ W' = S(W-1) + K - 2P \]
-\[ H' = S(H-1) + K - 2P \]
-
-这里\(W'\)和\(H'\)分别是输出特征图的宽度和高度。
-
-\section{注意力机制}
+\section{注意力机制及相关方法}
 注意力机制（Attention Mechanism）\cite{vaswani2017attention}是一种模仿认知注意力的机制。在认知科学中，由于信息处理的瓶颈，人类会选择性地关注信息中的某一一部分，同时忽略其他可见的信息。上述机制通常被称为注意力机制。随着该机制在Transformer\cite{vaswani2017attention}、BERT\cite{devlin-etal-2019-bert}、GPT\cite{2023GenerativePretrainedTransformerComprehensiveReviewEnablingTechnologiesPotentialApplicationsEmergingChallengesFutureDirections}等NLP领域的成功，该机制及应用又成为了研究的热点话题。目前在计算机视觉领域，ViT\cite{dosovitskiy2021an}、Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}等网络也都基于注意力机制进行设计。
 从注意力的形式来分类的话，可以分为软注意力(soft attention)和硬注意力(hard attention)。其中软注意力机制是可微可导的，本文中主要探讨的也是软注意力机制。
 
@@ -202,7 +119,7 @@ y_2-y \\ y-y_1 \end{bmatrix}.
 这些方法在处理动态场景解析和增强特征表示上有着不错的表现。在动态变化的场景中，模型可以使用多目标间的相互注意力来预测未来的状态。而通过计算不同目标之间的相互关系，可以获得更丰富的场景表示，这对于场景分类、事件检测等任务非常有帮助。
 
 
-\section{Attention U-Net网络}
+\subsection{Attention U-Net网络}
 Attention U-Net\cite{oktay2018attention}是一种结合了注意力机制的UNet网络，最初被应用于医学图像的分割问题上。它在U-Net的架构上增加了Attention Gate注意力门使得模型能更好的聚焦在目标区域。
 \begin{figure}[h]
   \centering
@@ -224,11 +141,12 @@ Attention U-Net\cite{oktay2018attention}是一种结合了注意力机制的UNet
 
 在图~\ref{fig:attentiongate}中展示的是一个注意力门结构。注意力门接收两组输入，一组是来自上一下采样层的特征图（\(g\)），作为查询。另一组是来自跳跃连接的特征图（\(x^l\)）键和值。
 两组特征图首先通过一个\(1 \times 1 \times 1\)的卷积层（表示为\(W_g\)和\(W_x\)），这一步用于减少通道的数量，以降低后续计算复杂度。
-接着，两组卷积后的特征图相加，并通过ReLU激活函数，得到\( \sigma_1\)。经过ReLU激活的特征图再次经过一个\(1 \times 1 \times 1\)卷积层，通常标识为\(\psi\)，然后通过Sigmoid激活函数得到\( \sigma_2\)，此时每个特征的激活值位于[0, 1]区间，代表了特征的重要性权重。将Sigmoid输出的权重与跳跃连接的特征图（\(x^l\)）相乘。在这个过程中，三个\(1 \times 1 \times 1\)卷积层包含了我们需要学习的参数，也赋予了该模块掌握关键权重的能力。通过注意力门，我们得到了在解码器特征图做查询的情况下的加权编码器特征图。利用我们新得到的特征图来进行下一步解码，比原本单纯接受编码器输入获得了更丰富的信息。
+接着，两组卷积后的特征图相加，并通过ReLU激活函数，得到\( \sigma_1\)。经过ReLU激活的特征图再次经过一个\(1 \times 1 \times 1\)卷积层，通常标识为\(\psi\)，然后通过Sigmoid激活函数得到\( \sigma_2\)，此时每个特征的激活值位于[0, 1]区间，代表了特征的重要性权重。将Sigmoid输出的权重与跳跃连接的特征图（\(x^l\)）相乘。在这个过程中，三个\(1 \times 1 \times 1\)卷积层包含了我们需要学习的参数，也赋予了该模块掌握关键权重的能力。通过注意力门，可以得到在解码器特征图做查询的情况下的加权编码器特征图。利用新得到的特征图来进行下一步解码，比原本单纯接受编码器输入获得了更丰富的信息。
 
-\section{Flow1D网络}
-Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}网络是一个基于注意力机制的光流估计网络。光流估计是计算机视觉中的一个基本问题，它旨在估计一幅图像上的每个像素点在时间序列中的运动，这在视频处理、运动分析、超分辨率、3D重建和自动驾驶等众多领域中都有广泛应用。光流估计是计算机视觉领域中的一个核心问题，光流是图像中像素点在时间维度上的瞬时运动速度和方向的场。光流是从连续的视频帧中估计出来的，这些连续的图像不仅具有时间上的连续性，光流也是从这些图像的空间关系中估计出来的。本文探讨的跨分辨率车辆计数问题，需要从同一时间的高分辨率低分辨率图像中找到空间一致性的关联，同时在连续的低分辨率图像中也要找到时间上的连续性关系。这和光流估计对于连续图像数据的利用有着不少相同之处。
+本文的模型受此启发，设计了跨分辨率空间注意力和低分辨率下的多来源时空注意力模块，充分综合了不同来源的相关特征信息以提升同一尺度下的分割图生成效果。
 
+\subsection{Flow1D网络}
+Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}网络是一个基于注意力机制的光流估计网络。光流估计是计算机视觉中的一个基本问题，它旨在估计一幅图像上的每个像素点在时间序列中的运动，这在视频处理、运动分析、超分辨率、3D重建和自动驾驶等众多领域中都有广泛应用。光流估计是计算机视觉领域中的一个核心问题，光流是图像中像素点在时间维度上的瞬时运动速度和方向的场。光流是从连续的视频帧中估计出来的，这些连续的图像不仅具有时间上的连续性，光流也是从这些图像的空间关系中估计出来的。
 \begin{figure}[h]
   \centering
   \includegraphics[width=\textwidth]{flow1d.png}
@@ -247,28 +165,6 @@ Flow1D\cite{2022ComparisonPoolingMethodsConvolutionalNeuralNetworks}网络是一
 \end{figure}
 图~\ref{fig:selfcross}是对注意力机制的一个很直观的展示。如果要计算源和目标的相关度，直接进行cross attention是不能得到红点与蓝点之间的相关关系的。因此需要再源上先进行self attention，使得每一个列向量包含着原先该列的一种加权分布。然后再进行cross attention操作，综合不同图像不同位置的信息。这是一种非常有效的策略。
 
+本文探讨的跨分辨率车辆计数问题，需要从同一时间的高分辨率图像和低分辨率图像之间找到空间一致性的关联，同时在连续的低分辨率图像中也要找到时间上的连续性关系。这和光流估计对于连续图像数据的利用有着不少相同之处。
 
-\section{CRVC网络}
-CRVC网络是针对CRVC数据集设计的深度学习模型。它以U-Net模型为骨架，针对跨分辨率空间CRVC数据集中的数据特性设计了两个分支来提取跨分辨率空间信息和时序信息。通过上述网络估计出密度分布后，使用线性回归模型得出最终目标计数结果。
-\subsection{网络设计}
-
-图~\ref{fig:CRVCnet}展示了模型的基本框架。模型接受4个输入，分别是高分辨率图像输入$I^{HR}$，对应低分辨率图像输入$I^{LR}$,与LR图像时间间隔较近的$I^{LR}_{near}$和与LR图像时间间隔较远的$I^{LR}_{far}$。模型包含两个独立学习的编码器HR encoder和LR encoder，前者用来提取高分辨率图像的特征，后者用来提取3个低分辨率图像的特征。提取出的低分辨率特征和高分辨率特征作差来综合更高精度的信息。之后通过带有跳跃连接的decoder完成分割图的生成。
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=\textwidth]{CRVCnet.png}
-  \caption{CRVC网络架构}
-  \label{fig:CRVCnet}
-\end{figure}
-
-
-\subsection{回归模型}
-
-在CRVC数据集中，车辆在目标区域是密集停放的，而且不存在重叠。因此从分割图上估计出的覆盖率和最终的车辆数目具有线性关系。通过CRVC网络得到的覆盖率分割图，根据低分辨率图像的缩放比例，可以估计出实际面积。通过线性回归，找出参数k来拟合
-\begin{equation}
-    Number_i=k_i\dots Area_i+b_i
-\end{equation}
-其中i表示第i类车辆。这些参数通过高分辨率图像的真值计算得到。
-
-\subsection{模型局限}
-CRVC网络针对CRVC数据集的特点进行了设计，在各项评价指标上均优于传统目标计数方法。然而模型对于样本数量较少的类别的计数效果不是很理想。CRVC网络通过引入两个额外分支来分别提取高分辨率的空间信息和低分辨率的时序信息，然而，对于数据集中的时间连续性和空间一致性信息的挖掘，网络的表现仍有进一步优化的空间。本文针对上述问题进行了针对性设计。
 
